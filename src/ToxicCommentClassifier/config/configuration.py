@@ -1,6 +1,6 @@
 from src.ToxicCommentClassifier.constants import *
 from src.ToxicCommentClassifier.utils.common import read_yaml, create_directories
-from src.ToxicCommentClassifier.entity import DataIngestionConfig
+from src.ToxicCommentClassifier.entity import DataIngestionConfig, DataPreprocessingConfig
 from pathlib import Path
 
 class ConfigurationManager:
@@ -26,3 +26,19 @@ class ConfigurationManager:
         )
 
         return data_ingestion_config
+
+    def get_data_preprocessing_config(self) -> DataPreprocessingConfig:
+        config = self.config.data_preprocessing
+
+        create_directories([config.root_dir])
+
+        data_preprocessing_config = DataPreprocessingConfig(
+            root_dir=Path(config.root_dir),
+            train_data_path=Path(config.train_data_path),
+            test_data_path=Path(config.test_data_path),
+            preprocessed_train_data_path=Path(config.preprocessed_train_data_path),
+            preprocessed_test_data_path=Path(config.preprocessed_test_data_path),
+            tokenizer_path=Path(config.tokenizer_path)
+        )
+
+        return data_preprocessing_config
