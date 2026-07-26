@@ -1,6 +1,6 @@
 from src.ToxicCommentClassifier.constants import *
 from src.ToxicCommentClassifier.utils.common import read_yaml, create_directories
-from src.ToxicCommentClassifier.entity import DataIngestionConfig, DataPreprocessingConfig, ModelTrainingConfig
+from src.ToxicCommentClassifier.entity import DataIngestionConfig, DataPreprocessingConfig, ModelTrainingConfig, ModelEvaluationConfig
 from pathlib import Path
 
 class ConfigurationManager:
@@ -72,3 +72,17 @@ class ConfigurationManager:
         )
 
         return model_training_config
+
+    def get_model_evaluation_config(self) -> ModelEvaluationConfig:
+        config = self.config.model_evaluation
+
+        create_directories([config.root_dir])
+
+        model_evaluation_config = ModelEvaluationConfig(
+            root_dir=Path(config.root_dir),
+            test_data_path=Path(config.test_data_path),
+            model_path=Path(config.model_path),
+            metric_file_name=Path(config.metric_file_name)
+        )
+
+        return model_evaluation_config

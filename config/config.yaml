@@ -18,3 +18,9 @@ model_training:
   train_data_path: artifacts/data_preprocessing/preprocessed_train.joblib
   test_data_path: artifacts/data_preprocessing/preprocessed_test.joblib
   model_name: model.joblib
+
+model_evaluation:
+  root_dir: artifacts/model_evaluation
+  test_data_path: artifacts/data_preprocessing/preprocessed_test.joblib
+  model_path: artifacts/model_training/model.joblib
+  metric_file_name: artifacts/model_evaluation/metrics.json

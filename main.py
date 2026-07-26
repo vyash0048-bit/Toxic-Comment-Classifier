@@ -37,3 +37,16 @@ try:
 except Exception as e:
     logger.exception(e)
     raise e
+
+from src.ToxicCommentClassifier.pipeline.stage_04_model_evaluation import ModelEvaluationPipeline
+
+STAGE_NAME = "Model Evaluation stage"
+
+try:
+    logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
+    obj = ModelEvaluationPipeline()
+    obj.main()
+    logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+except Exception as e:
+    logger.exception(e)
+    raise e
