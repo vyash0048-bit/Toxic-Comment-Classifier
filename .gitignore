@@ -218,11 +218,11 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Project specific
-artifacts/
-logs/
-
-# EXCEPTIONS: Allow pushing lightweight trained models to GitHub so Render can serve them!
+artifacts/*
 !artifacts/model_training/
+artifacts/model_training/*
 !artifacts/model_training/model.joblib
 !artifacts/data_preprocessing/
+artifacts/data_preprocessing/*
 !artifacts/data_preprocessing/vectorizer.joblib
+logs/
