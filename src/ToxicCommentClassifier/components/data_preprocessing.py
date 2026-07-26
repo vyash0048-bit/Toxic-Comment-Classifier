@@ -69,15 +69,9 @@ class DataPreprocessing:
             X_train = vectorizer.fit_transform(train_split["text_clean"])
             X_validation = vectorizer.transform(validation_split["text_clean"])
             
-            # test_df transform
-            X_test = vectorizer.transform(test_df["text_clean"])
-
             y_train = train_split[LABELS].astype(int)
             y_validation = validation_split[LABELS].astype(int)
             
-            # test_df may not have labels, but extract if it does
-            y_test = test_df[LABELS].astype(int) if set(LABELS).issubset(test_df.columns) else None
-
             logger.info(f"Training matrix: {X_train.shape}; validation matrix: {X_validation.shape}")
 
             logger.info(f"Saving vectorizer to {self.config.tokenizer_path}")
@@ -87,9 +81,20 @@ class DataPreprocessing:
             joblib.dump({"X": X_train, "y": y_train}, self.config.preprocessed_train_data_path)
             joblib.dump({"X": X_validation, "y": y_validation}, self.config.preprocessed_test_data_path)
             
-            # Save the transformed blind test set as well
+            # Process test_df
             test_path = str(self.config.preprocessed_test_data_path).replace("preprocessed_test", "preprocessed_blind_test")
-            joblib.dump({"X": X_test, "y": y_test}, test_path)
+            if set(LABELS).issubset(test_df.columns):
+                # Filter out Kaggle's -1 padding labels which break ROC-AUC
+                valid_mask = (test_df[LABELS] != -1).all(axis=1)
+                test_df_valid = test_df[valid_mask]
+                X_test_valid = vectorizer.transform(test_df_valid["text_clean"])
+                y_test_valid = test_df_valid[LABELS].astype(int)
+                joblib.dump({"X": X_test_valid, "y": y_test_valid}, test_path)
+                logger.info(f"Blind test matrix (labels included): {X_test_valid.shape}")
+            else:
+                X_test = vectorizer.transform(test_df["text_clean"])
+                joblib.dump({"X": X_test, "y": None}, test_path)
+                logger.info(f"Blind test matrix (no labels): {X_test.shape}")
 
             logger.info("Data preprocessing completed successfully!")
 

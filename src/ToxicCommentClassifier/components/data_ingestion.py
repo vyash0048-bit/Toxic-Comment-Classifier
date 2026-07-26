@@ -37,12 +37,19 @@ class DataIngestion:
         try:
             train_collection = os.getenv("TRAIN_COLLECTION")
             test_collection = os.getenv("TEST_COLLECTION")
+            test_labels_collection = os.getenv("TEST_LABELS_COLLECTION")
             
             logger.info(f"Exporting train collection: {train_collection} as dataframe")
             train_df = self.export_collection_as_dataframe(train_collection)
             
             logger.info(f"Exporting test collection: {test_collection} as dataframe")
             test_df = self.export_collection_as_dataframe(test_collection)
+            
+            if test_labels_collection:
+                logger.info(f"Exporting test labels collection: {test_labels_collection} as dataframe")
+                test_labels_df = self.export_collection_as_dataframe(test_labels_collection)
+                logger.info("Merging test and test_labels on 'id'")
+                test_df = pd.merge(test_df, test_labels_df, on="id", how="left")
             
             logger.info(f"Saving train dataframe to {self.config.train_data_path}")
             train_df.to_csv(self.config.train_data_path, index=False, header=True)

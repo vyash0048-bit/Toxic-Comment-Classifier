@@ -82,7 +82,8 @@ class ConfigurationManager:
             root_dir=Path(config.root_dir),
             test_data_path=Path(config.test_data_path),
             model_path=Path(config.model_path),
-            metric_file_name=Path(config.metric_file_name)
+            metric_file_name=Path(config.metric_file_name),
+            all_params=self.params
         )
 
         return model_evaluation_config

@@ -42,3 +42,4 @@ class ModelEvaluationConfig:
     test_data_path: Path
     model_path: Path
     metric_file_name: Path
+    all_params: dict

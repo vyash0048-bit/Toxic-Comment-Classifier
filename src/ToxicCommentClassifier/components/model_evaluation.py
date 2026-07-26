@@ -8,6 +8,8 @@ from src.ToxicCommentClassifier.logger import logger
 from src.ToxicCommentClassifier.exception import CustomException
 from src.ToxicCommentClassifier.entity import ModelEvaluationConfig
 from pathlib import Path
+import mlflow
+import dagshub
 
 LABELS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
 
@@ -65,7 +67,16 @@ class ModelEvaluation:
             logger.info(f"Saving metrics to {self.config.metric_file_name}")
             save_json(path=Path(self.config.metric_file_name), data=metrics)
 
-            logger.info("Model evaluation completed successfully!")
+            logger.info("Initializing MLFlow via Dagshub...")
+            dagshub.init(repo_owner='vyash0048', repo_name='Toxic-Comment-Classifier', mlflow=True)
+
+            logger.info("Logging to MLFlow...")
+            with mlflow.start_run():
+                mlflow.log_params(self.config.all_params.get("ModelTraining", {}))
+                mlflow.log_params(self.config.all_params.get("DataPreprocessing", {}))
+                mlflow.log_metrics(metrics)
+
+            logger.info("Model evaluation and MLflow logging completed successfully!")
 
         except Exception as e:
             raise CustomException(e, sys)
