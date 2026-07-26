@@ -1,0 +1,21 @@
+# Environments
+.env
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Git and IDEs
+.git/
+.vscode/
+.idea/
+
+# Heavy datasets (we only need the preprocessed models for inference, not the raw text data)
+artifacts/data_ingestion/*.csv
