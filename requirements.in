@@ -14,3 +14,5 @@ types-PyYAML
 matplotlib
 seaborn
 Flask-Cors
+pymongo
+python-dotenv
