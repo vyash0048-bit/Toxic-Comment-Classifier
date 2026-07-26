@@ -1,6 +1,6 @@
 from src.ToxicCommentClassifier.constants import *
 from src.ToxicCommentClassifier.utils.common import read_yaml, create_directories
-from src.ToxicCommentClassifier.entity import DataIngestionConfig, DataPreprocessingConfig
+from src.ToxicCommentClassifier.entity import DataIngestionConfig, DataPreprocessingConfig, ModelTrainingConfig
 from pathlib import Path
 
 class ConfigurationManager:
@@ -29,6 +29,7 @@ class ConfigurationManager:
 
     def get_data_preprocessing_config(self) -> DataPreprocessingConfig:
         config = self.config.data_preprocessing
+        params = self.params.DataPreprocessing
 
         create_directories([config.root_dir])
 
@@ -38,7 +39,36 @@ class ConfigurationManager:
             test_data_path=Path(config.test_data_path),
             preprocessed_train_data_path=Path(config.preprocessed_train_data_path),
             preprocessed_test_data_path=Path(config.preprocessed_test_data_path),
-            tokenizer_path=Path(config.tokenizer_path)
+            tokenizer_path=Path(config.tokenizer_path),
+            test_size=params.test_size,
+            random_state=params.random_state,
+            word_ngram_range=params.word_ngram_range,
+            word_max_features=params.word_max_features,
+            word_min_df=params.word_min_df,
+            char_ngram_range=params.char_ngram_range,
+            char_max_features=params.char_max_features,
+            char_min_df=params.char_min_df
         )
 
         return data_preprocessing_config
+
+    def get_model_training_config(self) -> ModelTrainingConfig:
+        config = self.config.model_training
+
+        create_directories([config.root_dir])
+
+        params = self.params.ModelTraining
+
+        model_training_config = ModelTrainingConfig(
+            root_dir=Path(config.root_dir),
+            train_data_path=Path(config.train_data_path),
+            test_data_path=Path(config.test_data_path),
+            model_name=config.model_name,
+            solver=params.solver,
+            C=params.C,
+            max_iter=params.max_iter,
+            n_jobs=params.n_jobs,
+            verbose=params.verbose
+        )
+
+        return model_training_config

@@ -1,1 +1,16 @@
-key: value
+DataPreprocessing:
+  test_size: 0.10
+  random_state: 42
+  word_ngram_range: [1, 2]
+  word_max_features: 50000
+  word_min_df: 2
+  char_ngram_range: [3, 5]
+  char_max_features: 60000
+  char_min_df: 2
+
+ModelTraining:
+  solver: "saga"
+  C: 0.5
+  max_iter: 1
+  n_jobs: 1
+  verbose: 1

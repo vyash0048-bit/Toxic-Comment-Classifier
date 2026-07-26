@@ -12,7 +12,6 @@ from src.ToxicCommentClassifier.exception import CustomException
 from src.ToxicCommentClassifier.entity import DataPreprocessingConfig
 
 LABELS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
-RANDOM_STATE = 42
 
 def clean_text(text):
     text = "" if pd.isna(text) else str(text).lower()
@@ -20,18 +19,24 @@ def clean_text(text):
     text = re.sub(r"https?://\S+|www\.\S+", " URL ", text)
     return re.sub(r"\s+", " ", text).strip() or "unknown"
 
-def make_vectorizer():
-    return FeatureUnion([
-        ("word", TfidfVectorizer(sublinear_tf=True, strip_accents="unicode", analyzer="word", 
-                                 token_pattern=r"\w{1,}", stop_words="english", 
-                                 ngram_range=(1, 2), min_df=2, max_features=50_000)),
-        ("char", TfidfVectorizer(sublinear_tf=True, strip_accents="unicode", analyzer="char", 
-                                 ngram_range=(3, 5), min_df=2, max_features=60_000)),
-    ])
-
 class DataPreprocessing:
     def __init__(self, config: DataPreprocessingConfig):
         self.config = config
+
+    def make_vectorizer(self):
+        return FeatureUnion([
+            ("word", TfidfVectorizer(
+                sublinear_tf=True, strip_accents="unicode", analyzer="word", 
+                token_pattern=r"\w{1,}", stop_words="english", 
+                ngram_range=tuple(self.config.word_ngram_range), 
+                min_df=self.config.word_min_df, 
+                max_features=self.config.word_max_features)),
+            ("char", TfidfVectorizer(
+                sublinear_tf=True, strip_accents="unicode", analyzer="char", 
+                ngram_range=tuple(self.config.char_ngram_range), 
+                min_df=self.config.char_min_df, 
+                max_features=self.config.char_max_features)),
+        ])
 
     def initiate_data_preprocessing(self):
         try:
@@ -50,14 +55,17 @@ class DataPreprocessing:
             
             test_df["comment_length"] = test_df["comment_text"].fillna("").str.len()
             
-            logger.info("Splitting train into train and validation sets")
+            logger.info(f"Splitting train into train and validation sets (test_size={self.config.test_size}, random_state={self.config.random_state})")
             train_indices, validation_indices = train_test_split(
-                train_df.index, test_size=0.10, random_state=RANDOM_STATE, stratify=train_df["is_toxic"]
+                train_df.index, 
+                test_size=self.config.test_size, 
+                random_state=self.config.random_state, 
+                stratify=train_df["is_toxic"]
             )
             train_split, validation_split = train_df.loc[train_indices], train_df.loc[validation_indices]
 
-            logger.info("Fitting and transforming TfidfVectorizer (Word + Char Level)")
-            vectorizer = make_vectorizer()
+            logger.info("Fitting and transforming TfidfVectorizer (Word + Char Level) with params from params.yaml")
+            vectorizer = self.make_vectorizer()
             X_train = vectorizer.fit_transform(train_split["text_clean"])
             X_validation = vectorizer.transform(validation_split["text_clean"])
             

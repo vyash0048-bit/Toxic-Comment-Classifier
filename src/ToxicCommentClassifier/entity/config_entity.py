@@ -15,3 +15,23 @@ class DataPreprocessingConfig:
     preprocessed_train_data_path: Path
     preprocessed_test_data_path: Path
     tokenizer_path: Path
+    test_size: float
+    random_state: int
+    word_ngram_range: list
+    word_max_features: int
+    word_min_df: int
+    char_ngram_range: list
+    char_max_features: int
+    char_min_df: int
+
+@dataclass(frozen=True)
+class ModelTrainingConfig:
+    root_dir: Path
+    train_data_path: Path
+    test_data_path: Path
+    model_name: str
+    solver: str
+    C: float
+    max_iter: int
+    n_jobs: int
+    verbose: int

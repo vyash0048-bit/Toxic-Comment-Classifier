@@ -12,3 +12,9 @@ data_preprocessing:
   preprocessed_train_data_path: artifacts/data_preprocessing/preprocessed_train.joblib
   preprocessed_test_data_path: artifacts/data_preprocessing/preprocessed_test.joblib
   tokenizer_path: artifacts/data_preprocessing/vectorizer.joblib
+
+model_training:
+  root_dir: artifacts/model_training
+  train_data_path: artifacts/data_preprocessing/preprocessed_train.joblib
+  test_data_path: artifacts/data_preprocessing/preprocessed_test.joblib
+  model_name: model.joblib
