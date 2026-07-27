@@ -1,0 +1,81 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python -m src.ToxicCommentClassifier.pipeline.stage_01_data_ingestion
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: bca0f68fa446d2e941dd44fbe333de3e
+      size: 1066
+    - path: src/ToxicCommentClassifier/components/data_ingestion.py
+      hash: md5
+      md5: 1abbdacd666e9d100a631420017c9b57
+      size: 2788
+    - path: src/ToxicCommentClassifier/pipeline/stage_01_data_ingestion.py
+      hash: md5
+      md5: 07360c44617f01bff2c8a7ef2d0d7417
+      size: 911
+    outs:
+    - path: artifacts/data_ingestion/test.csv
+      hash: md5
+      md5: 4738b9a9b8fe11385c73297ef320e5fe
+      size: 64224049
+    - path: artifacts/data_ingestion/train.csv
+      hash: md5
+      md5: 9a1b738a7fa7de6343cae3f07adb1364
+      size: 68586250
+  data_preprocessing:
+    cmd: python -m 
+      src.ToxicCommentClassifier.pipeline.stage_02_data_preprocessing
+    deps:
+    - path: artifacts/data_ingestion/test.csv
+      hash: md5
+      md5: 4738b9a9b8fe11385c73297ef320e5fe
+      size: 64224049
+    - path: artifacts/data_ingestion/train.csv
+      hash: md5
+      md5: 9a1b738a7fa7de6343cae3f07adb1364
+      size: 68586250
+    - path: config/config.yaml
+      hash: md5
+      md5: bca0f68fa446d2e941dd44fbe333de3e
+      size: 1066
+    - path: src/ToxicCommentClassifier/components/data_preprocessing.py
+      hash: md5
+      md5: 2cafeef31630358194e966df23f446a0
+      size: 5055
+    - path: src/ToxicCommentClassifier/pipeline/stage_02_data_preprocessing.py
+      hash: md5
+      md5: 26ef5976bdcc7c592ff0a0e32796538f
+      size: 960
+    params:
+      params.yaml:
+        DataPreprocessing.char_max_features: 60000
+        DataPreprocessing.char_min_df: 2
+        DataPreprocessing.char_ngram_range:
+        - 3
+        - 5
+        DataPreprocessing.random_state: 42
+        DataPreprocessing.test_size: 0.1
+        DataPreprocessing.word_max_features: 50000
+        DataPreprocessing.word_min_df: 2
+        DataPreprocessing.word_ngram_range:
+        - 1
+        - 2
+    outs:
+    - path: artifacts/data_preprocessing/preprocessed_blind_test.joblib
+      hash: md5
+      md5: e4e6d67e6a7a4d0bde265d26e1b8c739
+      size: 568918892
+    - path: artifacts/data_preprocessing/preprocessed_test.joblib
+      hash: md5
+      md5: 92b3edd8d00e62d17bb58b888cc6432b
+      size: 149787148
+    - path: artifacts/data_preprocessing/preprocessed_train.joblib
+      hash: md5
+      md5: 168995bdd800a7ce1af9c9a6018bc800
+      size: 1345417972
+    - path: artifacts/data_preprocessing/vectorizer.joblib
+      hash: md5
+      md5: d03f9bb8ef96f30241c3ab4bcaef5e6b
+      size: 4055645
