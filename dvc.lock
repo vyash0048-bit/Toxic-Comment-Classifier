@@ -79,3 +79,38 @@ stages:
       hash: md5
       md5: d03f9bb8ef96f30241c3ab4bcaef5e6b
       size: 4055645
+  model_training:
+    cmd: python -m src.ToxicCommentClassifier.pipeline.stage_03_model_training
+    deps:
+    - path: artifacts/data_preprocessing/preprocessed_test.joblib
+      hash: md5
+      md5: 92b3edd8d00e62d17bb58b888cc6432b
+      size: 149787148
+    - path: artifacts/data_preprocessing/preprocessed_train.joblib
+      hash: md5
+      md5: 168995bdd800a7ce1af9c9a6018bc800
+      size: 1345417972
+    - path: config/config.yaml
+      hash: md5
+      md5: bca0f68fa446d2e941dd44fbe333de3e
+      size: 1066
+    - path: src/ToxicCommentClassifier/components/model_training.py
+      hash: md5
+      md5: a7c2cdda21612fe66ddb8d6a79b9812b
+      size: 2616
+    - path: src/ToxicCommentClassifier/pipeline/stage_03_model_training.py
+      hash: md5
+      md5: c9945aa1437f420447a9a5e3b283c168
+      size: 1132
+    params:
+      params.yaml:
+        ModelTraining.C: 0.5
+        ModelTraining.max_iter: 1
+        ModelTraining.n_jobs: 1
+        ModelTraining.solver: saga
+        ModelTraining.verbose: 1
+    outs:
+    - path: artifacts/model_training/model.joblib
+      hash: md5
+      md5: a920cbd2bc41e68522e79d5c0162b8d8
+      size: 5284117
