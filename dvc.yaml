@@ -79,7 +79,6 @@ stages:
     outs:
       - artifacts/bilstm_training/bilstm_model.keras
       - artifacts/bilstm_training/keras_tokenizer.joblib
-      - artifacts/bilstm_training/fasttext_model.bin
       - artifacts/bilstm_training/optimal_thresholds.joblib
 
   bilstm_evaluation:

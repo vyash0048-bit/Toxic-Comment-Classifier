@@ -30,7 +30,6 @@ bilstm_training:
   train_data_path: artifacts/data_ingestion/train.csv
   test_data_path: artifacts/data_ingestion/test.csv
   tokenizer_path: artifacts/bilstm_training/keras_tokenizer.joblib
-  fasttext_model_path: artifacts/bilstm_training/fasttext_model.bin
   model_path: artifacts/bilstm_training/bilstm_model.keras
   optimal_thresholds_path: artifacts/bilstm_training/optimal_thresholds.joblib
 

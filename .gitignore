@@ -226,3 +226,7 @@ artifacts/model_training/*
 artifacts/data_preprocessing/*
 !artifacts/data_preprocessing/vectorizer.joblib
 logs/
+
+wiki-news-300d-1M.vec*
+downloaded_bilstm_model.keras
+

@@ -50,9 +50,9 @@ class BiLSTMTrainingConfig:
     train_data_path: Path
     test_data_path: Path
     tokenizer_path: Path
-    fasttext_model_path: Path
     model_path: Path
     optimal_thresholds_path: Path
+    max_vocab_size: int
     max_seq_len: int
     embedding_dim: int
     lstm_units: int

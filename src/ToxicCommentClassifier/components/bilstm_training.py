@@ -1,126 +1,64 @@
 import os
 import sys
 import re
+import urllib.request
+from zipfile import ZipFile
 import numpy as np
 import pandas as pd
 import joblib
 from sklearn.model_selection import train_test_split
-from sklearn.utils.class_weight import compute_sample_weight
-from gensim.models import FastText as FastTextModel
 from src.ToxicCommentClassifier.logger import logger
 from src.ToxicCommentClassifier.exception import CustomException
 from src.ToxicCommentClassifier.entity import BiLSTMTrainingConfig
 
 LABELS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
 
-
 def clean_text(text):
-    """Same cleaning function used by the TF-IDF pipeline."""
     text = "" if pd.isna(text) else str(text).lower()
     text = re.sub(r"\n", " ", text)
     text = re.sub(r"https?://\S+|www\.\S+", " URL ", text)
     return re.sub(r"\s+", " ", text).strip() or "unknown"
-
-
-def compute_class_weights(y_train):
-    """
-    Compute per-label class weights to handle severe imbalance.
-    Returns a dict mapping label index -> {0: weight_neg, 1: weight_pos}.
-    """
-    class_weights = {}
-    for i, label in enumerate(LABELS):
-        col = y_train[:, i]
-        n_pos = col.sum()
-        n_neg = len(col) - n_pos
-        # Inverse frequency with smoothing, capped to avoid extreme weights
-        weight_pos = min((n_neg / max(n_pos, 1)) * 0.5, 20.0)
-        weight_neg = 0.5
-        class_weights[i] = {0: weight_neg, 1: weight_pos}
-    return class_weights
-
-
-def build_sample_weights(y_train, class_weights):
-    """
-    Convert per-label class weights into per-sample weights.
-    For multi-label: take the max weight across all positive labels for each sample.
-    """
-    n_samples = y_train.shape[0]
-    sample_weights = np.ones(n_samples, dtype=np.float32)
-
-    for i in range(y_train.shape[1]):
-        pos_mask = y_train[:, i] == 1
-        pos_weight = class_weights[i][1]
-        # For samples with this label positive, take the max weight seen so far
-        sample_weights[pos_mask] = np.maximum(sample_weights[pos_mask], pos_weight)
-
-    return sample_weights
-
 
 class BiLSTMTraining:
     def __init__(self, config: BiLSTMTrainingConfig):
         self.config = config
 
     def _build_model(self, embedding_matrix, vocab_size):
-        """
-        Improved BiLSTM architecture:
-        - Trainable embeddings (fine-tuned from FastText)
-        - SpatialDropout1D
-        - Bidirectional LSTM
-        - Dual pooling: GlobalMaxPool + GlobalAvgPool concatenated
-        - BatchNormalization + Dense layers
-        """
         import tensorflow as tf
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Input, Embedding, SpatialDropout1D, Bidirectional, LSTM, GlobalMaxPool1D, Dense, Dropout
 
-        input_layer = tf.keras.layers.Input(
-            shape=(self.config.max_seq_len,), name="input"
-        )
-
-        # Embedding layer — trainable to fine-tune FastText vectors
-        embedding = tf.keras.layers.Embedding(
-            input_dim=vocab_size,
-            output_dim=self.config.embedding_dim,
-            weights=[embedding_matrix],
-            input_length=self.config.max_seq_len,
-            trainable=False,
-            name="fasttext_embedding"
-        )(input_layer)
-
-        x = tf.keras.layers.SpatialDropout1D(self.config.spatial_dropout)(embedding)
-
-        # Bidirectional LSTM with return_sequences for pooling
-        x = tf.keras.layers.Bidirectional(
-            tf.keras.layers.LSTM(
-                self.config.lstm_units,
-                return_sequences=True,
-                dropout=0.1,
-                recurrent_dropout=0.1
+        model = Sequential([
+            Input(shape=(self.config.max_seq_len,)),
+            Embedding(
+                input_dim=vocab_size,
+                output_dim=self.config.embedding_dim,
+                weights=[embedding_matrix],
+                trainable=False
             ),
-            name="bilstm"
-        )(x)
-
-        # Dual pooling — captures different aspects of the sequence
-        max_pool = tf.keras.layers.GlobalMaxPooling1D(name="global_max_pool")(x)
-        avg_pool = tf.keras.layers.GlobalAveragePooling1D(name="global_avg_pool")(x)
-        x = tf.keras.layers.Concatenate(name="concat_pool")([max_pool, avg_pool])
-
-        # Dense head with BatchNorm
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.Dense(128, activation="relu", name="dense_1")(x)
-        x = tf.keras.layers.Dropout(self.config.dropout)(x)
-        x = tf.keras.layers.Dense(64, activation="relu", name="dense_2")(x)
-        x = tf.keras.layers.Dropout(self.config.dropout * 0.5)(x)
-
-        output = tf.keras.layers.Dense(
-            len(LABELS), activation="sigmoid", name="output"
-        )(x)
-
-        model = tf.keras.Model(inputs=input_layer, outputs=output)
+            SpatialDropout1D(0.2),
+            Bidirectional(
+                LSTM(
+                    self.config.lstm_units,
+                    return_sequences=True,
+                    dropout=0.2
+                )
+            ),
+            GlobalMaxPool1D(),
+            Dense(64, activation="relu"),
+            Dropout(self.config.dropout),
+            Dense(6, activation="sigmoid")
+        ])
 
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=self.config.learning_rate),
             loss="binary_crossentropy",
             metrics=[
-                tf.keras.metrics.AUC(name="auc", multi_label=True),
+                tf.keras.metrics.AUC(
+                    multi_label=True,
+                    num_labels=6,
+                    name="auc"
+                )
             ]
         )
         return model
@@ -130,13 +68,13 @@ class BiLSTMTraining:
             import tensorflow as tf
             from tensorflow.keras.preprocessing.text import Tokenizer
             from tensorflow.keras.preprocessing.sequence import pad_sequences
+            from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
 
             # --- 1. Load and clean data ---
             logger.info(f"Loading training data from {self.config.train_data_path}")
             train_df = pd.read_csv(self.config.train_data_path)
             train_df["text_clean"] = train_df["comment_text"].map(clean_text)
 
-            # Stratified split (same logic as TF-IDF pipeline)
             train_df["is_toxic"] = train_df[LABELS].any(axis=1).astype(int)
             train_indices, val_indices = train_test_split(
                 train_df.index,
@@ -148,91 +86,95 @@ class BiLSTMTraining:
             val_split = train_df.loc[val_indices]
 
             # --- 2. Keras Tokenizer (word → integer mapping) ---
-            logger.info("Fitting Keras Tokenizer on training text...")
-            keras_tokenizer = Tokenizer(oov_token="<OOV>")
+            logger.info(f"Fitting Keras Tokenizer (vocab_size={self.config.max_vocab_size})...")
+            keras_tokenizer = Tokenizer(
+                num_words=self.config.max_vocab_size,
+                oov_token="<OOV>"
+            )
             keras_tokenizer.fit_on_texts(train_split["text_clean"])
-            word_index = keras_tokenizer.word_index
-            vocab_size = len(word_index) + 1  # +1 for padding token at index 0
-            logger.info(f"Vocabulary size: {vocab_size}")
+            
+            X_train = keras_tokenizer.texts_to_sequences(train_split["text_clean"])
+            X_val = keras_tokenizer.texts_to_sequences(val_split["text_clean"])
 
-            # Convert text to padded integer sequences
             X_train = pad_sequences(
-                keras_tokenizer.texts_to_sequences(train_split["text_clean"]),
-                maxlen=self.config.max_seq_len, padding="post", truncating="post"
+                X_train,
+                maxlen=self.config.max_seq_len,
+                padding="post",
+                truncating="post"
             )
+
             X_val = pad_sequences(
-                keras_tokenizer.texts_to_sequences(val_split["text_clean"]),
-                maxlen=self.config.max_seq_len, padding="post", truncating="post"
+                X_val,
+                maxlen=self.config.max_seq_len,
+                padding="post",
+                truncating="post"
             )
-            y_train = train_split[LABELS].values.astype(np.float32)
-            y_val = val_split[LABELS].values.astype(np.float32)
+            
+            y_train = train_split[LABELS].values.astype("float32")
+            y_val = val_split[LABELS].values.astype("float32")
 
-            logger.info(f"X_train shape: {X_train.shape}, X_val shape: {X_val.shape}")
+            # --- 3. Pre-trained Embeddings ---
+            zip_file_path = "wiki-news-300d-1M.vec.zip"
+            vec_file_path = "wiki-news-300d-1M.vec"
+            
+            if not os.path.exists(vec_file_path):
+                if not os.path.exists(zip_file_path):
+                    logger.info("Downloading wiki-news-300d-1M.vec.zip...")
+                    url = "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M.vec.zip"
+                    urllib.request.urlretrieve(url, zip_file_path)
+                    logger.info("Download complete.")
+                
+                logger.info("Extracting embeddings...")
+                with ZipFile(zip_file_path, 'r') as zipObj:
+                    zipObj.extractall()
+                logger.info("Extraction complete.")
 
-            # --- 3. Compute class weights for imbalanced labels ---
-            logger.info("Computing class weights for imbalanced labels...")
-            cw = compute_class_weights(y_train)
-            for i, label in enumerate(LABELS):
-                n_pos = int(y_train[:, i].sum())
-                n_total = len(y_train)
-                logger.info(f"  {label}: {n_pos}/{n_total} positive "
-                            f"({100*n_pos/n_total:.2f}%), weight={cw[i][1]:.2f}")
-            sample_weights = build_sample_weights(y_train, cw)
-            logger.info(f"Sample weights range: [{sample_weights.min():.2f}, {sample_weights.max():.2f}]")
+            logger.info("Loading pre-trained embeddings...")
+            embeddings_index = {}
+            with open(vec_file_path, encoding="utf8", errors="ignore") as f:
+                next(f)  # Skip header
+                for line in f:
+                    values = line.rstrip().split()
+                    if len(values) != 301:
+                        continue
+                    word = values[0]
+                    vector = np.asarray(values[1:], dtype=np.float32)
+                    embeddings_index[word] = vector
 
-            # --- 4. Train FastText on corpus ---
-            logger.info("Training FastText embeddings on corpus...")
-            sentences = [text.split() for text in train_split["text_clean"]]
-            ft_model = FastTextModel(
-                sentences,
-                vector_size=self.config.embedding_dim,
-                window=5,
-                min_count=2,
-                workers=4,
-                epochs=3,  # Reduced for faster training
-                sg=1  # Skip-gram
-            )
-            ft_model.save(str(self.config.fasttext_model_path))
-            logger.info(f"FastText model saved to {self.config.fasttext_model_path}")
+            logger.info(f"Loaded embeddings: {len(embeddings_index)}")
+            
+            embedding_matrix = np.zeros((self.config.max_vocab_size, self.config.embedding_dim))
+            for word, idx in keras_tokenizer.word_index.items():
+                if idx >= self.config.max_vocab_size:
+                    continue
+                vector = embeddings_index.get(word)
+                if vector is not None:
+                    embedding_matrix[idx] = vector
 
-            # --- 5. Build embedding matrix ---
-            logger.info("Building embedding matrix from FastText...")
-            embedding_matrix = np.zeros((vocab_size, self.config.embedding_dim), dtype=np.float32)
-            found, missed = 0, 0
-            for word, idx in word_index.items():
-                if word in ft_model.wv:
-                    embedding_matrix[idx] = ft_model.wv[word]
-                    found += 1
-                else:
-                    # FastText can generate vectors for OOV words via subword info
-                    try:
-                        embedding_matrix[idx] = ft_model.wv.get_vector(word)
-                        found += 1
-                    except KeyError:
-                        missed += 1
-            logger.info(f"Embedding coverage: {found}/{found + missed} words "
-                        f"({100 * found / (found + missed):.1f}%)")
-
-            # --- 6. Build and train model ---
-            logger.info("Building improved BiLSTM model...")
-            model = self._build_model(embedding_matrix, vocab_size)
+            # --- 4. Build and train model ---
+            logger.info("Building model...")
+            model = self._build_model(embedding_matrix, self.config.max_vocab_size)
             model.summary(print_fn=logger.info)
 
             callbacks = [
-                tf.keras.callbacks.EarlyStopping(
-                    monitor="val_auc", patience=3,
-                    restore_best_weights=True, mode="max"
+                ReduceLROnPlateau(
+                    monitor="val_auc",
+                    mode="max",
+                    factor=0.5,
+                    patience=1
                 ),
-                tf.keras.callbacks.ReduceLROnPlateau(
-                    monitor="val_loss", factor=0.5,
-                    patience=2, min_lr=1e-6, verbose=1
-                ),
+                EarlyStopping(
+                    monitor="val_auc", 
+                    patience=2,
+                    restore_best_weights=True, 
+                    mode="max"
+                )
             ]
 
-            logger.info("Training BiLSTM model with class-weighted samples...")
+            logger.info("Training model...")
             model.fit(
-                X_train, y_train,
-                sample_weight=sample_weights,
+                X_train,
+                y_train,
                 validation_data=(X_val, y_val),
                 epochs=self.config.epochs,
                 batch_size=self.config.batch_size,
@@ -240,13 +182,12 @@ class BiLSTMTraining:
                 verbose=1
             )
 
-            # --- 7. Find optimal per-label thresholds on validation set ---
+            # --- 5. Find optimal per-label thresholds on validation set ---
             logger.info("Finding optimal per-label thresholds on validation set...")
             val_probs = model.predict(X_val, batch_size=self.config.batch_size, verbose=0)
             optimal_thresholds = self._find_optimal_thresholds(y_val, val_probs)
-            logger.info(f"Optimal thresholds: {optimal_thresholds}")
-
-            # --- 8. Save artifacts ---
+            
+            # --- 6. Save artifacts ---
             logger.info(f"Saving Keras tokenizer to {self.config.tokenizer_path}")
             joblib.dump(keras_tokenizer, self.config.tokenizer_path)
 
@@ -264,16 +205,11 @@ class BiLSTMTraining:
 
     @staticmethod
     def _find_optimal_thresholds(y_true, y_prob):
-        """
-        For each label, find the threshold that maximizes F1 score.
-        Searches thresholds from 0.1 to 0.9 in steps of 0.01.
-        """
         from sklearn.metrics import f1_score as compute_f1
-
         thresholds = {}
         for i, label in enumerate(LABELS):
             best_f1 = 0
-            best_thresh = 0.5  # Default fallback
+            best_thresh = 0.5
             for thresh in np.arange(0.10, 0.90, 0.01):
                 preds = (y_prob[:, i] >= thresh).astype(int)
                 f1 = compute_f1(y_true[:, i], preds, zero_division=0)

@@ -5,8 +5,8 @@ stages:
     deps:
     - path: config/config.yaml
       hash: md5
-      md5: 924edcfee9a5aecb406303990ddb2b5c
-      size: 1885
+      md5: fe57d9925d4080e3461a0352ceabf9fe
+      size: 1817
     - path: src/ToxicCommentClassifier/components/data_ingestion.py
       hash: md5
       md5: 1abbdacd666e9d100a631420017c9b57
@@ -38,8 +38,8 @@ stages:
       size: 68586250
     - path: config/config.yaml
       hash: md5
-      md5: 924edcfee9a5aecb406303990ddb2b5c
-      size: 1885
+      md5: fe57d9925d4080e3461a0352ceabf9fe
+      size: 1817
     - path: src/ToxicCommentClassifier/components/data_preprocessing.py
       hash: md5
       md5: 2cafeef31630358194e966df23f446a0
@@ -77,7 +77,7 @@ stages:
       size: 1198368716
     - path: artifacts/data_preprocessing/vectorizer.joblib
       hash: md5
-      md5: 55a12a5f78a6ffab927a55e75b8538ee
+      md5: 7ae46f430f1168525d25bdc8cdb198e0
       size: 4055868
   model_training:
     cmd: python -m src.ToxicCommentClassifier.pipeline.stage_03_model_training
@@ -92,8 +92,8 @@ stages:
       size: 1198368716
     - path: config/config.yaml
       hash: md5
-      md5: 924edcfee9a5aecb406303990ddb2b5c
-      size: 1885
+      md5: fe57d9925d4080e3461a0352ceabf9fe
+      size: 1817
     - path: src/ToxicCommentClassifier/components/model_training.py
       hash: md5
       md5: a7c2cdda21612fe66ddb8d6a79b9812b
@@ -112,7 +112,7 @@ stages:
     outs:
     - path: artifacts/model_training/model.joblib
       hash: md5
-      md5: b2f82093899038d5b3064fc0705048d2
+      md5: 88a9cdc773bd6702928451b77374f1df
       size: 5284117
   model_evaluation:
     cmd: python -m src.ToxicCommentClassifier.pipeline.stage_04_model_evaluation
@@ -123,12 +123,12 @@ stages:
       size: 568992796
     - path: artifacts/model_training/model.joblib
       hash: md5
-      md5: b2f82093899038d5b3064fc0705048d2
+      md5: 88a9cdc773bd6702928451b77374f1df
       size: 5284117
     - path: config/config.yaml
       hash: md5
-      md5: 924edcfee9a5aecb406303990ddb2b5c
-      size: 1885
+      md5: fe57d9925d4080e3461a0352ceabf9fe
+      size: 1817
     - path: src/ToxicCommentClassifier/components/model_evaluation.py
       hash: md5
       md5: 4e3b1b2345b8d856d61a2d7676b75dba
@@ -140,8 +140,8 @@ stages:
     outs:
     - path: artifacts/model_evaluation/metrics.json
       hash: md5
-      md5: 622566b7cc60d87ec90f04787d83d4bd
-      size: 1597
+      md5: f413a765b8be38a048f5ebd9cc6893b3
+      size: 1606
   bilstm_training:
     cmd: python -m src.ToxicCommentClassifier.pipeline.stage_05_bilstm_training
     deps:
@@ -151,42 +151,38 @@ stages:
       size: 68586250
     - path: config/config.yaml
       hash: md5
-      md5: 924edcfee9a5aecb406303990ddb2b5c
-      size: 1885
+      md5: fe57d9925d4080e3461a0352ceabf9fe
+      size: 1817
     - path: src/ToxicCommentClassifier/components/bilstm_training.py
       hash: md5
-      md5: d8dad669da34279e3ee779201307f32b
-      size: 11924
+      md5: 7dbbfb2de9d0da453800715ee745e726
+      size: 8771
     - path: src/ToxicCommentClassifier/pipeline/stage_05_bilstm_training.py
       hash: md5
       md5: 0bd0b711dbe59a3ecd4db6251c3daa33
       size: 1103
     params:
       params.yaml:
-        BiLSTMTraining.batch_size: 512
+        BiLSTMTraining.batch_size: 256
         BiLSTMTraining.dropout: 0.3
-        BiLSTMTraining.embedding_dim: 50
+        BiLSTMTraining.embedding_dim: 300
         BiLSTMTraining.epochs: 3
         BiLSTMTraining.learning_rate: 0.001
-        BiLSTMTraining.lstm_units: 64
-        BiLSTMTraining.max_seq_len: 100
+        BiLSTMTraining.lstm_units: 128
+        BiLSTMTraining.max_seq_len: 150
         BiLSTMTraining.spatial_dropout: 0.2
     outs:
     - path: artifacts/bilstm_training/bilstm_model.keras
       hash: md5
-      md5: 959538e9cf25257ddb1ec20879b97edb
-      size: 38731609
-    - path: artifacts/bilstm_training/fasttext_model.bin
-      hash: md5
-      md5: 29ba2b1d9f444477184ae0691a81293a
-      size: 65558421
+      md5: e45edc9e164d98f096a7f23c2ffa4ba2
+      size: 29523304
     - path: artifacts/bilstm_training/keras_tokenizer.joblib
       hash: md5
-      md5: 1786280081e5cf32f9960209b9b51470
-      size: 8440566
+      md5: ab64117f839c32e0b516ea55b13d31be
+      size: 8440568
     - path: artifacts/bilstm_training/optimal_thresholds.joblib
       hash: md5
-      md5: 19985f6198d4c73beb16eb137a7491f1
+      md5: d6c76d5270e56beeb3838c82fa4d6407
       size: 137
   bilstm_evaluation:
     cmd: python -m 
@@ -194,15 +190,15 @@ stages:
     deps:
     - path: artifacts/bilstm_training/bilstm_model.keras
       hash: md5
-      md5: 959538e9cf25257ddb1ec20879b97edb
-      size: 38731609
+      md5: e45edc9e164d98f096a7f23c2ffa4ba2
+      size: 29523304
     - path: artifacts/bilstm_training/keras_tokenizer.joblib
       hash: md5
-      md5: 1786280081e5cf32f9960209b9b51470
-      size: 8440566
+      md5: ab64117f839c32e0b516ea55b13d31be
+      size: 8440568
     - path: artifacts/bilstm_training/optimal_thresholds.joblib
       hash: md5
-      md5: 19985f6198d4c73beb16eb137a7491f1
+      md5: d6c76d5270e56beeb3838c82fa4d6407
       size: 137
     - path: artifacts/data_ingestion/test.csv
       hash: md5
@@ -210,8 +206,8 @@ stages:
       size: 64224049
     - path: config/config.yaml
       hash: md5
-      md5: 924edcfee9a5aecb406303990ddb2b5c
-      size: 1885
+      md5: fe57d9925d4080e3461a0352ceabf9fe
+      size: 1817
     - path: src/ToxicCommentClassifier/components/bilstm_evaluation.py
       hash: md5
       md5: 590aca96d4984c765bd8c0e09661ece6
@@ -222,9 +218,9 @@ stages:
       size: 932
     params:
       params.yaml:
-        BiLSTMTraining.max_seq_len: 100
+        BiLSTMTraining.max_seq_len: 150
     outs:
     - path: artifacts/bilstm_evaluation/metrics.json
       hash: md5
-      md5: cec7da16e13b9dd9bb114f0c30ea641b
-      size: 1605
+      md5: f2fd278d2ae3a40dc1f15f4d06ba7812
+      size: 1602
