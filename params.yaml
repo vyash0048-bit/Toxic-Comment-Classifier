@@ -16,11 +16,11 @@ ModelTraining:
   verbose: 1
 
 BiLSTMTraining:
-  max_seq_len: 200
-  embedding_dim: 100
+  max_seq_len: 100
+  embedding_dim: 50
   lstm_units: 64
   dropout: 0.3
   spatial_dropout: 0.2
-  batch_size: 256
+  batch_size: 512
   epochs: 3
   learning_rate: 0.001

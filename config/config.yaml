@@ -32,10 +32,12 @@ bilstm_training:
   tokenizer_path: artifacts/bilstm_training/keras_tokenizer.joblib
   fasttext_model_path: artifacts/bilstm_training/fasttext_model.bin
   model_path: artifacts/bilstm_training/bilstm_model.keras
+  optimal_thresholds_path: artifacts/bilstm_training/optimal_thresholds.joblib
 
 bilstm_evaluation:
   root_dir: artifacts/bilstm_evaluation
   test_data_path: artifacts/data_ingestion/test.csv
   keras_tokenizer_path: artifacts/bilstm_training/keras_tokenizer.joblib
   model_path: artifacts/bilstm_training/bilstm_model.keras
+  optimal_thresholds_path: artifacts/bilstm_training/optimal_thresholds.joblib
   metric_file_name: artifacts/bilstm_evaluation/metrics.json

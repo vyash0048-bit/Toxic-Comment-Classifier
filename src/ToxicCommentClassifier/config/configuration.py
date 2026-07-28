@@ -104,6 +104,7 @@ class ConfigurationManager:
             tokenizer_path=Path(config.tokenizer_path),
             fasttext_model_path=Path(config.fasttext_model_path),
             model_path=Path(config.model_path),
+            optimal_thresholds_path=Path(config.optimal_thresholds_path),
             max_seq_len=params.max_seq_len,
             embedding_dim=params.embedding_dim,
             lstm_units=params.lstm_units,
@@ -126,6 +127,7 @@ class ConfigurationManager:
             test_data_path=Path(config.test_data_path),
             keras_tokenizer_path=Path(config.keras_tokenizer_path),
             model_path=Path(config.model_path),
+            optimal_thresholds_path=Path(config.optimal_thresholds_path),
             metric_file_name=Path(config.metric_file_name),
             all_params=self.params,
             max_seq_len=self.params.BiLSTMTraining.max_seq_len

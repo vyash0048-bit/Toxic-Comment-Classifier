@@ -52,6 +52,7 @@ class BiLSTMTrainingConfig:
     tokenizer_path: Path
     fasttext_model_path: Path
     model_path: Path
+    optimal_thresholds_path: Path
     max_seq_len: int
     embedding_dim: int
     lstm_units: int
@@ -67,6 +68,7 @@ class BiLSTMEvaluationConfig:
     test_data_path: Path
     keras_tokenizer_path: Path
     model_path: Path
+    optimal_thresholds_path: Path
     metric_file_name: Path
     all_params: dict
     max_seq_len: int

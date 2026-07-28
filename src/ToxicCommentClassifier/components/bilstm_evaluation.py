@@ -58,6 +58,9 @@ class BiLSTMEvaluation:
             logger.info(f"Loading BiLSTM model from {self.config.model_path}")
             model = tf.keras.models.load_model(str(self.config.model_path))
 
+            logger.info(f"Loading optimal thresholds from {self.config.optimal_thresholds_path}")
+            optimal_thresholds = joblib.load(self.config.optimal_thresholds_path)
+
             # --- 3. Prepare features ---
             X_test = pad_sequences(
                 keras_tokenizer.texts_to_sequences(test_df["text_clean"]),
@@ -70,7 +73,12 @@ class BiLSTMEvaluation:
             # --- 4. Predict ---
             logger.info("Predicting on test set...")
             test_probabilities = model.predict(X_test, batch_size=256, verbose=1)
-            test_predictions = (test_probabilities > 0.5).astype(int)
+            
+            # Apply per-label optimal thresholds
+            test_predictions = np.zeros_like(test_probabilities, dtype=int)
+            for i, label in enumerate(LABELS):
+                thresh = optimal_thresholds.get(label, 0.5)
+                test_predictions[:, i] = (test_probabilities[:, i] >= thresh).astype(int)
 
             # --- 5. Calculate metrics ---
             logger.info("Calculating metrics...")

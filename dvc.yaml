@@ -80,6 +80,7 @@ stages:
       - artifacts/bilstm_training/bilstm_model.keras
       - artifacts/bilstm_training/keras_tokenizer.joblib
       - artifacts/bilstm_training/fasttext_model.bin
+      - artifacts/bilstm_training/optimal_thresholds.joblib
 
   bilstm_evaluation:
     cmd: python -m src.ToxicCommentClassifier.pipeline.stage_06_bilstm_evaluation
@@ -90,6 +91,7 @@ stages:
       - artifacts/data_ingestion/test.csv
       - artifacts/bilstm_training/bilstm_model.keras
       - artifacts/bilstm_training/keras_tokenizer.joblib
+      - artifacts/bilstm_training/optimal_thresholds.joblib
     params:
       - BiLSTMTraining.max_seq_len
     outs:
