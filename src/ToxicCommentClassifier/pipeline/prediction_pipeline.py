@@ -45,7 +45,9 @@ class PredictionPipeline:
             bilstm_model_path = str(bilstm_config.model_path)
             keras_tokenizer_path = str(bilstm_config.tokenizer_path)
             
-            if os.path.exists(bilstm_model_path) and os.path.exists(keras_tokenizer_path):
+            if os.environ.get("RENDER") == "true":
+                logger.warning("Running on Render (512MB RAM). Skipping BiLSTM load to prevent OOM crash.")
+            elif os.path.exists(bilstm_model_path) and os.path.exists(keras_tokenizer_path):
                 import tensorflow as tf
                 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
