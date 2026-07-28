@@ -50,3 +50,29 @@ try:
 except Exception as e:
     logger.exception(e)
     raise e
+
+from src.ToxicCommentClassifier.pipeline.stage_05_bilstm_training import BiLSTMTrainingPipeline
+
+STAGE_NAME = "BiLSTM Training stage"
+
+try:
+    logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
+    obj = BiLSTMTrainingPipeline()
+    obj.main()
+    logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+except Exception as e:
+    logger.exception(e)
+    raise e
+
+from src.ToxicCommentClassifier.pipeline.stage_06_bilstm_evaluation import BiLSTMEvaluationPipeline
+
+STAGE_NAME = "BiLSTM Evaluation stage"
+
+try:
+    logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
+    obj = BiLSTMEvaluationPipeline()
+    obj.main()
+    logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+except Exception as e:
+    logger.exception(e)
+    raise e

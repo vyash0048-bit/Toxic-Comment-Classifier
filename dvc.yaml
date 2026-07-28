@@ -1,0 +1,96 @@
+stages:
+  data_ingestion:
+    cmd: python -m src.ToxicCommentClassifier.pipeline.stage_01_data_ingestion
+    deps:
+      - src/ToxicCommentClassifier/pipeline/stage_01_data_ingestion.py
+      - src/ToxicCommentClassifier/components/data_ingestion.py
+      - config/config.yaml
+    outs:
+      - artifacts/data_ingestion/train.csv
+      - artifacts/data_ingestion/test.csv
+
+  data_preprocessing:
+    cmd: python -m src.ToxicCommentClassifier.pipeline.stage_02_data_preprocessing
+    deps:
+      - src/ToxicCommentClassifier/pipeline/stage_02_data_preprocessing.py
+      - src/ToxicCommentClassifier/components/data_preprocessing.py
+      - config/config.yaml
+      - artifacts/data_ingestion/train.csv
+      - artifacts/data_ingestion/test.csv
+    params:
+      - DataPreprocessing.test_size
+      - DataPreprocessing.random_state
+      - DataPreprocessing.word_ngram_range
+      - DataPreprocessing.word_max_features
+      - DataPreprocessing.word_min_df
+      - DataPreprocessing.char_ngram_range
+      - DataPreprocessing.char_max_features
+      - DataPreprocessing.char_min_df
+    outs:
+      - artifacts/data_preprocessing/preprocessed_train.joblib
+      - artifacts/data_preprocessing/preprocessed_test.joblib
+      - artifacts/data_preprocessing/preprocessed_blind_test.joblib
+      - artifacts/data_preprocessing/vectorizer.joblib
+
+  model_training:
+    cmd: python -m src.ToxicCommentClassifier.pipeline.stage_03_model_training
+    deps:
+      - src/ToxicCommentClassifier/pipeline/stage_03_model_training.py
+      - src/ToxicCommentClassifier/components/model_training.py
+      - config/config.yaml
+      - artifacts/data_preprocessing/preprocessed_train.joblib
+      - artifacts/data_preprocessing/preprocessed_test.joblib
+    params:
+      - ModelTraining.solver
+      - ModelTraining.C
+      - ModelTraining.max_iter
+      - ModelTraining.n_jobs
+      - ModelTraining.verbose
+    outs:
+      - artifacts/model_training/model.joblib
+
+  model_evaluation:
+    cmd: python -m src.ToxicCommentClassifier.pipeline.stage_04_model_evaluation
+    deps:
+      - src/ToxicCommentClassifier/pipeline/stage_04_model_evaluation.py
+      - src/ToxicCommentClassifier/components/model_evaluation.py
+      - config/config.yaml
+      - artifacts/data_preprocessing/preprocessed_blind_test.joblib
+      - artifacts/model_training/model.joblib
+    outs:
+      - artifacts/model_evaluation/metrics.json
+
+  bilstm_training:
+    cmd: python -m src.ToxicCommentClassifier.pipeline.stage_05_bilstm_training
+    deps:
+      - src/ToxicCommentClassifier/pipeline/stage_05_bilstm_training.py
+      - src/ToxicCommentClassifier/components/bilstm_training.py
+      - config/config.yaml
+      - artifacts/data_ingestion/train.csv
+    params:
+      - BiLSTMTraining.max_seq_len
+      - BiLSTMTraining.embedding_dim
+      - BiLSTMTraining.lstm_units
+      - BiLSTMTraining.dropout
+      - BiLSTMTraining.spatial_dropout
+      - BiLSTMTraining.batch_size
+      - BiLSTMTraining.epochs
+      - BiLSTMTraining.learning_rate
+    outs:
+      - artifacts/bilstm_training/bilstm_model.keras
+      - artifacts/bilstm_training/keras_tokenizer.joblib
+      - artifacts/bilstm_training/fasttext_model.bin
+
+  bilstm_evaluation:
+    cmd: python -m src.ToxicCommentClassifier.pipeline.stage_06_bilstm_evaluation
+    deps:
+      - src/ToxicCommentClassifier/pipeline/stage_06_bilstm_evaluation.py
+      - src/ToxicCommentClassifier/components/bilstm_evaluation.py
+      - config/config.yaml
+      - artifacts/data_ingestion/test.csv
+      - artifacts/bilstm_training/bilstm_model.keras
+      - artifacts/bilstm_training/keras_tokenizer.joblib
+    params:
+      - BiLSTMTraining.max_seq_len
+    outs:
+      - artifacts/bilstm_evaluation/metrics.json

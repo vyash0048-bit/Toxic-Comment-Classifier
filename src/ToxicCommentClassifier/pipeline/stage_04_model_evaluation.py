@@ -13,10 +13,6 @@ class ModelEvaluationPipeline:
         config = ConfigurationManager()
         model_evaluation_config = config.get_model_evaluation_config()
         
-        if os.path.exists(model_evaluation_config.metric_file_name):
-            logger.info("Metrics file already exists. Skipping evaluation stage.")
-            return
-
         model_evaluation = ModelEvaluation(config=model_evaluation_config)
         model_evaluation.initiate_model_evaluation()
 

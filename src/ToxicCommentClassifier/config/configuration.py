@@ -1,6 +1,9 @@
 from src.ToxicCommentClassifier.constants import *
 from src.ToxicCommentClassifier.utils.common import read_yaml, create_directories
-from src.ToxicCommentClassifier.entity import DataIngestionConfig, DataPreprocessingConfig, ModelTrainingConfig, ModelEvaluationConfig
+from src.ToxicCommentClassifier.entity import (
+    DataIngestionConfig, DataPreprocessingConfig, ModelTrainingConfig,
+    ModelEvaluationConfig, BiLSTMTrainingConfig, BiLSTMEvaluationConfig
+)
 from pathlib import Path
 
 class ConfigurationManager:
@@ -87,3 +90,45 @@ class ConfigurationManager:
         )
 
         return model_evaluation_config
+
+    def get_bilstm_training_config(self) -> BiLSTMTrainingConfig:
+        config = self.config.bilstm_training
+        params = self.params.BiLSTMTraining
+
+        create_directories([config.root_dir])
+
+        bilstm_training_config = BiLSTMTrainingConfig(
+            root_dir=Path(config.root_dir),
+            train_data_path=Path(config.train_data_path),
+            test_data_path=Path(config.test_data_path),
+            tokenizer_path=Path(config.tokenizer_path),
+            fasttext_model_path=Path(config.fasttext_model_path),
+            model_path=Path(config.model_path),
+            max_seq_len=params.max_seq_len,
+            embedding_dim=params.embedding_dim,
+            lstm_units=params.lstm_units,
+            dropout=params.dropout,
+            spatial_dropout=params.spatial_dropout,
+            batch_size=params.batch_size,
+            epochs=params.epochs,
+            learning_rate=params.learning_rate
+        )
+
+        return bilstm_training_config
+
+    def get_bilstm_evaluation_config(self) -> BiLSTMEvaluationConfig:
+        config = self.config.bilstm_evaluation
+
+        create_directories([config.root_dir])
+
+        bilstm_evaluation_config = BiLSTMEvaluationConfig(
+            root_dir=Path(config.root_dir),
+            test_data_path=Path(config.test_data_path),
+            keras_tokenizer_path=Path(config.keras_tokenizer_path),
+            model_path=Path(config.model_path),
+            metric_file_name=Path(config.metric_file_name),
+            all_params=self.params,
+            max_seq_len=self.params.BiLSTMTraining.max_seq_len
+        )
+
+        return bilstm_evaluation_config

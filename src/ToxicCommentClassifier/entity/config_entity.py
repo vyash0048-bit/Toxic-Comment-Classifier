@@ -43,3 +43,30 @@ class ModelEvaluationConfig:
     model_path: Path
     metric_file_name: Path
     all_params: dict
+
+@dataclass(frozen=True)
+class BiLSTMTrainingConfig:
+    root_dir: Path
+    train_data_path: Path
+    test_data_path: Path
+    tokenizer_path: Path
+    fasttext_model_path: Path
+    model_path: Path
+    max_seq_len: int
+    embedding_dim: int
+    lstm_units: int
+    dropout: float
+    spatial_dropout: float
+    batch_size: int
+    epochs: int
+    learning_rate: float
+
+@dataclass(frozen=True)
+class BiLSTMEvaluationConfig:
+    root_dir: Path
+    test_data_path: Path
+    keras_tokenizer_path: Path
+    model_path: Path
+    metric_file_name: Path
+    all_params: dict
+    max_seq_len: int

@@ -3,4 +3,6 @@ from src.ToxicCommentClassifier.entity.config_entity import (
     DataPreprocessingConfig,
     ModelTrainingConfig,
     ModelEvaluationConfig,
+    BiLSTMTrainingConfig,
+    BiLSTMEvaluationConfig,
 )

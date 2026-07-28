@@ -11,19 +11,29 @@ prediction_pipeline = PredictionPipeline()
 def home():
     return render_template("index.html")
 
+@app.route("/models", methods=["GET"])
+def available_models():
+    """Return the list of available model types."""
+    return jsonify({"models": prediction_pipeline.available_models}), 200
+
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
         data = request.json
         text = data.get("text", "")
+        model_type = data.get("model", "lr")
         
         if not text.strip():
             return jsonify({"error": "Empty text provided"}), 400
+        
+        if model_type not in prediction_pipeline.available_models:
+            return jsonify({"error": f"Model '{model_type}' is not available. Available: {prediction_pipeline.available_models}"}), 400
             
-        predictions = prediction_pipeline.predict(text)
+        predictions = prediction_pipeline.predict(text, model_type=model_type)
         
         return jsonify({
             "text": text,
+            "model": model_type,
             "predictions": predictions
         }), 200
     except Exception as e:
