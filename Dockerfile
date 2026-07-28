@@ -4,6 +4,9 @@ FROM python:3.12-slim
 # Set the working directory inside the container
 WORKDIR /app
 
+# Install system dependencies needed for some Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
 # Copy only the dependency files first to leverage Docker layer caching
 COPY requirements.* ./
 
@@ -21,5 +24,6 @@ EXPOSE 5000
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
-# Command to run the web server
-CMD ["python", "app.py"]
+# Pull DVC artifacts (if remote is configured) then start the app.
+# The '|| true' ensures the app starts even if dvc pull fails.
+CMD ["sh", "-c", "dvc pull || true && python app.py"]

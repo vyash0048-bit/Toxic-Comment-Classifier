@@ -12,17 +12,26 @@ LABELS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate
 class PredictionPipeline:
     def __init__(self):
         config_manager = ConfigurationManager()
-        
-        # --- Load Logistic Regression artifacts ---
-        preprocessing_config = config_manager.get_data_preprocessing_config()
-        evaluation_config = config_manager.get_model_evaluation_config()
-        
-        self.tfidf_vectorizer_path = preprocessing_config.tokenizer_path
-        self.lr_model_path = evaluation_config.model_path
-        
-        self.tfidf_vectorizer = joblib.load(self.tfidf_vectorizer_path)
-        self.lr_model = joblib.load(self.lr_model_path)
-        logger.info("Logistic Regression model loaded successfully.")
+
+        # --- Load Logistic Regression artifacts (if available) ---
+        self.tfidf_vectorizer = None
+        self.lr_model = None
+
+        try:
+            preprocessing_config = config_manager.get_data_preprocessing_config()
+            evaluation_config = config_manager.get_model_evaluation_config()
+
+            vectorizer_path = str(preprocessing_config.tokenizer_path)
+            model_path = str(evaluation_config.model_path)
+
+            if os.path.exists(vectorizer_path) and os.path.exists(model_path):
+                self.tfidf_vectorizer = joblib.load(vectorizer_path)
+                self.lr_model = joblib.load(model_path)
+                logger.info("Logistic Regression model loaded successfully.")
+            else:
+                logger.warning("LR model artifacts not found. LR predictions will be unavailable.")
+        except Exception as e:
+            logger.warning(f"Could not load LR model: {e}. LR predictions will be unavailable.")
 
         # --- Load BiLSTM artifacts (if available) ---
         self.bilstm_model = None
@@ -67,6 +76,9 @@ class PredictionPipeline:
 
     def _predict_lr(self, cleaned_text: str) -> dict:
         """Predict using TF-IDF + Logistic Regression."""
+        if self.lr_model is None or self.tfidf_vectorizer is None:
+            raise ValueError("LR model is not available. Please train it first.")
+
         vectorized_text = self.tfidf_vectorizer.transform([cleaned_text])
         probabilities = self.lr_model.predict_proba(vectorized_text)[0]
         
@@ -97,7 +109,9 @@ class PredictionPipeline:
     @property
     def available_models(self) -> list:
         """Return list of available model types."""
-        models = ["lr"]
+        models = []
+        if self.lr_model is not None:
+            models.append("lr")
         if self.bilstm_model is not None:
             models.append("bilstm")
         return models
