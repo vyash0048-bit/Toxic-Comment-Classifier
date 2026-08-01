@@ -327,10 +327,6 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 </p>
 
 <p>
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=14&pause=1000&color=94A3B8&center=true&vCenter=true&random=false&width=400&lines=Built+with+❤️+by+vyash0048-bit;Star+⭐+if+you+found+this+useful!" alt="Footer" />
-</p>
-
-<p>
   <a href="https://github.com/vyash0048-bit">
     <img src="https://img.shields.io/badge/GitHub-vyash0048--bit-181717?style=flat-square&logo=github" />
   </a>
