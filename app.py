@@ -118,5 +118,8 @@ async def predict_api(request: Request):
 # Custom routes (/flask, /models, /predict) are registered first and take priority.
 app = gr.mount_gradio_app(fast_app, demo, path="/")
 
+# Local development: run with `uvicorn app:app --host 0.0.0.0 --port 7860`
+# On HF Spaces, the `app` variable is detected and served automatically.
 if __name__ == "__main__":
-    demo.launch(ssr_mode=False)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
