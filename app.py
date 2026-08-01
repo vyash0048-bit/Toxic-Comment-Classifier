@@ -1,45 +1,66 @@
-from flask import Flask, request, jsonify, render_template
-import os
+import gradio as gr
 from src.ToxicCommentClassifier.pipeline.prediction_pipeline import PredictionPipeline
 
-app = Flask(__name__)
+# Initialize the pipeline
+pipeline = PredictionPipeline()
 
-# Initialize the pipeline globally so models are loaded only once at startup
-prediction_pipeline = PredictionPipeline()
-
-@app.route("/", methods=["GET"])
-def home():
-    return render_template("index.html")
-
-@app.route("/models", methods=["GET"])
-def available_models():
-    """Return the list of available model types."""
-    return jsonify({"models": prediction_pipeline.available_models}), 200
-
-@app.route("/predict", methods=["POST"])
-def predict():
+def predict_toxicity(text, model_choice):
+    if not text.strip():
+        return "Please enter some text."
+        
     try:
-        data = request.json
-        text = data.get("text", "")
-        model_type = data.get("model", "lr")
+        # map UI choice to model_type
+        model_type = "lr" if model_choice == "Logistic Regression" else "bilstm"
         
-        if not text.strip():
-            return jsonify({"error": "Empty text provided"}), 400
-        
-        if model_type not in prediction_pipeline.available_models:
-            return jsonify({"error": f"Model '{model_type}' is not available. Available: {prediction_pipeline.available_models}"}), 400
+        # Check if model is available
+        if model_type not in pipeline.available_models:
+            return f"Model '{model_choice}' is not available right now."
             
-        predictions = prediction_pipeline.predict(text, model_type=model_type)
+        predictions = pipeline.predict(text, model_type=model_type)
         
-        return jsonify({
-            "text": text,
-            "model": model_type,
-            "predictions": predictions
-        }), 200
+        # Format the output nicely
+        result = "### Toxicity Analysis:\n\n"
+        for label, prob in predictions.items():
+            result += f"- **{label.replace('_', ' ').title()}**: {prob:.2%}\n"
+            
+        return result
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return f"An error occurred: {str(e)}"
+
+# Define the Gradio interface
+with gr.Blocks(title="Toxic Comment Classifier") as demo:
+    gr.Markdown("# 🛡️ Toxic Comment Classifier")
+    gr.Markdown("Detect toxicity in comments using Machine Learning.")
+    
+    with gr.Row():
+        with gr.Column():
+            text_input = gr.Textbox(
+                lines=5, 
+                placeholder="Enter a comment here to analyze its toxicity...",
+                label="Comment Text"
+            )
+            
+            available = ["Logistic Regression"]
+            if "bilstm" in pipeline.available_models:
+                available.append("BiLSTM")
+                
+            model_dropdown = gr.Dropdown(
+                choices=available,
+                value=available[0] if available else None,
+                label="Select Model"
+            )
+            
+            submit_btn = gr.Button("Analyze", variant="primary")
+            
+        with gr.Column():
+            output_display = gr.Markdown(label="Results")
+            
+    submit_btn.click(
+        fn=predict_toxicity,
+        inputs=[text_input, model_dropdown],
+        outputs=output_display
+    )
 
 if __name__ == "__main__":
-    # Ensure port 7860 is open for Hugging Face Spaces
-    port = int(os.environ.get("PORT", 7860))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    demo.launch()
