@@ -1,6 +1,5 @@
 import os
 import gradio as gr
-import spaces
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from src.ToxicCommentClassifier.pipeline.prediction_pipeline import PredictionPipeline
@@ -8,9 +7,8 @@ from src.ToxicCommentClassifier.pipeline.prediction_pipeline import PredictionPi
 # Initialize the pipeline
 pipeline = PredictionPipeline()
 
-# --- Gradio predict function (decorated for ZeroGPU) ---
+# --- Gradio predict function ---
 
-@spaces.GPU
 def predict_toxicity(text, model_choice):
     if not text.strip():
         return "Please enter some text."
@@ -70,23 +68,23 @@ with gr.Blocks(title="Toxic Comment Classifier") as demo:
         outputs=output_display
     )
 
-# --- FastAPI app with Flask-style API routes ---
+# --- FastAPI app with Flask-style API routes + Gradio ---
 
-fast_app = FastAPI()
+app = FastAPI()
 
-@fast_app.get("/flask", response_class=HTMLResponse)
+@app.get("/flask", response_class=HTMLResponse)
 async def flask_home():
     """Serve the custom Flask-style HTML UI at /flask."""
     template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates", "index.html")
     with open(template_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
-@fast_app.get("/models")
+@app.get("/models")
 async def available_models_api():
     """Return the list of available model types (Flask API)."""
     return JSONResponse(content={"models": pipeline.available_models})
 
-@fast_app.post("/predict")
+@app.post("/predict")
 async def predict_api(request: Request):
     """Prediction API endpoint (mirrors flask_app.py)."""
     try:
@@ -113,13 +111,10 @@ async def predict_api(request: Request):
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-# Mount Gradio onto the FastAPI app at root.
-# HF Spaces Gradio SDK detects the `app` variable and serves it.
-# Custom routes (/flask, /models, /predict) are registered first and take priority.
-app = gr.mount_gradio_app(fast_app, demo, path="/")
+# Mount Gradio at root
+app = gr.mount_gradio_app(app, demo, path="/")
 
-# Local development: run with `uvicorn app:app --host 0.0.0.0 --port 7860`
-# On HF Spaces, the `app` variable is detected and served automatically.
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    port = int(os.environ.get("PORT", 7860))
+    uvicorn.run(app, host="0.0.0.0", port=port)
