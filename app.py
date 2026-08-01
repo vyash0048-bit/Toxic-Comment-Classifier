@@ -1,9 +1,60 @@
+import os
 import gradio as gr
 import spaces
+from datetime import datetime, timezone
+from dotenv import load_dotenv
 from src.ToxicCommentClassifier.pipeline.prediction_pipeline import PredictionPipeline
+from src.ToxicCommentClassifier.logger import logger
+
+# Load environment variables
+load_dotenv()
 
 # Initialize the pipeline
 pipeline = PredictionPipeline()
+
+# --- MongoDB connection for storing predictions ---
+mongo_client = None
+predictions_collection = None
+
+try:
+    mongodb_uri = os.getenv("MONGODB_URI")
+    db_name = os.getenv("DATABASE_NAME")
+    pred_collection_name = os.getenv("PREDICTION_COLLECTION", "predictions")
+
+    if mongodb_uri and db_name:
+        from pymongo import MongoClient
+        mongo_client = MongoClient(mongodb_uri, serverSelectionTimeoutMS=5000)
+        # Verify connection
+        mongo_client.admin.command("ping")
+        predictions_collection = mongo_client[db_name][pred_collection_name]
+        logger.info(f"MongoDB connected. Predictions will be stored in '{db_name}.{pred_collection_name}'.")
+    else:
+        logger.warning("MongoDB env vars not set. Predictions will NOT be stored.")
+except Exception as e:
+    logger.warning(f"Could not connect to MongoDB: {e}. Predictions will NOT be stored.")
+    predictions_collection = None
+
+
+def store_prediction(text: str, model_type: str, predictions: dict):
+    """Store a prediction record in MongoDB (non-blocking, fire-and-forget)."""
+    if predictions_collection is None:
+        return
+    try:
+        import threading
+        def _insert():
+            try:
+                predictions_collection.insert_one({
+                    "comment_text": text,
+                    "model_used": model_type,
+                    "predictions": predictions,
+                    "timestamp": datetime.now(timezone.utc),
+                })
+            except Exception as e:
+                logger.warning(f"Failed to store prediction in MongoDB: {e}")
+        threading.Thread(target=_insert, daemon=True).start()
+    except Exception as e:
+        logger.warning(f"Failed to start MongoDB insert thread: {e}")
+
 
 @spaces.GPU
 def predict_toxicity(text, model_choice):
@@ -19,6 +70,9 @@ def predict_toxicity(text, model_choice):
             return f"Model '{model_choice}' is not available right now."
             
         predictions = pipeline.predict(text, model_type=model_type)
+
+        # Store prediction in MongoDB (async, non-blocking)
+        store_prediction(text, model_type, predictions)
         
         # Format the output nicely
         result = "### Toxicity Analysis:\n\n"
