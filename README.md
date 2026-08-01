@@ -3,7 +3,9 @@ title: Toxic Comment Classifier
 emoji: 🛡️
 colorFrom: red
 colorTo: yellow
-sdk: docker
+sdk: gradio
+python_version: "3.12"
+app_file: app.py
 pinned: false
 ---
 

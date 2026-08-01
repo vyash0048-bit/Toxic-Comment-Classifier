@@ -3,13 +3,12 @@ import gradio as gr
 import spaces
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from src.ToxicCommentClassifier.pipeline.prediction_pipeline import PredictionPipeline
 
 # Initialize the pipeline
 pipeline = PredictionPipeline()
 
-# --- Gradio Interface ---
+# --- Gradio predict function (decorated for ZeroGPU) ---
 
 @spaces.GPU
 def predict_toxicity(text, model_choice):
@@ -36,7 +35,8 @@ def predict_toxicity(text, model_choice):
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-# Define the Gradio interface
+# --- Gradio Blocks interface ---
+
 with gr.Blocks(title="Toxic Comment Classifier") as demo:
     gr.Markdown("# 🛡️ Toxic Comment Classifier")
     gr.Markdown("Detect toxicity in comments using Machine Learning.")
@@ -70,24 +70,24 @@ with gr.Blocks(title="Toxic Comment Classifier") as demo:
         outputs=output_display
     )
 
-# --- FastAPI backend with Flask-style API routes ---
+# --- FastAPI app with Flask-style API routes ---
 
-app = FastAPI()
+fast_app = FastAPI()
 
-@app.get("/", response_class=HTMLResponse)
-async def home():
-    """Serve the custom Flask-style HTML UI."""
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
+@fast_app.get("/flask", response_class=HTMLResponse)
+async def flask_home():
+    """Serve the custom Flask-style HTML UI at /flask."""
+    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates", "index.html")
     with open(template_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
-@app.get("/models")
-async def available_models():
-    """Return the list of available model types."""
+@fast_app.get("/models")
+async def available_models_api():
+    """Return the list of available model types (Flask API)."""
     return JSONResponse(content={"models": pipeline.available_models})
 
-@app.post("/predict")
-async def predict(request: Request):
+@fast_app.post("/predict")
+async def predict_api(request: Request):
     """Prediction API endpoint (mirrors flask_app.py)."""
     try:
         data = await request.json()
@@ -113,10 +113,10 @@ async def predict(request: Request):
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-# Mount Gradio app at /gradio
-app = gr.mount_gradio_app(app, demo, path="/gradio")
+# Mount Gradio onto the FastAPI app at root.
+# HF Spaces Gradio SDK detects the `app` variable and serves it.
+# Custom routes (/flask, /models, /predict) are registered first and take priority.
+app = gr.mount_gradio_app(fast_app, demo, path="/")
 
 if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 7860))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    demo.launch(ssr_mode=False)
