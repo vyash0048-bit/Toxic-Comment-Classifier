@@ -35,25 +35,21 @@ except Exception as e:
     predictions_collection = None
 
 
-def store_prediction(text: str, model_type: str, predictions: dict):
-    """Store a prediction record in MongoDB (non-blocking, fire-and-forget)."""
+def store_prediction(text: str, model_type: str, predictions: dict) -> str:
+    """Store a prediction record in MongoDB (synchronous for debugging)."""
     if predictions_collection is None:
-        return
+        return "⚠️ Database not connected (Missing Secrets or Network Blocked)."
     try:
-        import threading
-        def _insert():
-            try:
-                predictions_collection.insert_one({
-                    "comment_text": text,
-                    "model_used": model_type,
-                    "predictions": predictions,
-                    "timestamp": datetime.now(timezone.utc),
-                })
-            except Exception as e:
-                logger.warning(f"Failed to store prediction in MongoDB: {e}")
-        threading.Thread(target=_insert, daemon=True).start()
+        predictions_collection.insert_one({
+            "comment_text": text,
+            "model_used": model_type,
+            "predictions": predictions,
+            "timestamp": datetime.now(timezone.utc),
+        })
+        return "✅ Saved to MongoDB successfully."
     except Exception as e:
-        logger.warning(f"Failed to start MongoDB insert thread: {e}")
+        logger.warning(f"Failed to store prediction in MongoDB: {e}")
+        return f"❌ Failed to save: {str(e)}"
 
 
 @spaces.GPU
@@ -78,14 +74,15 @@ def predict_toxicity(text, model_choice):
         # 1. Run inference on the ZeroGPU worker
         predictions = run_model_inference(text, model_type)
 
-        # 2. Store prediction in MongoDB (from this persistent CPU container)
-        store_prediction(text, model_type, predictions)
+        # 2. Store prediction in MongoDB (synchronously to get the status)
+        db_status = store_prediction(text, model_type, predictions)
         
         # 3. Format the output nicely
         result = "### Toxicity Analysis:\n\n"
         for label, prob in predictions.items():
             result += f"- **{label.replace('_', ' ').title()}**: {prob:.2%}\n"
             
+        result += f"\n---\n**Database Status**: {db_status}"
         return result
         
     except Exception as e:
