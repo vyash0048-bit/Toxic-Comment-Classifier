@@ -90,6 +90,7 @@ End-to-end reproducible pipeline with DVC versioning, MLflow experiment tracking
 flowchart LR
     subgraph Data["📦 Data Layer"]
         A[(MongoDB)] -->|PyMongo| B[Data Ingestion]
+        K -->|Async Store| A
     end
 
     subgraph Preprocessing["⚙️ Feature Engineering"]
@@ -111,8 +112,7 @@ flowchart LR
 
     subgraph Deployment["🚀 Deployment"]
         H --> J[MLflow + DagsHub]
-        H --> K["Gradio UI\n(HF Spaces)"]
-        H --> L["Flask API\n(Docker)"]
+        H --> K["Gradio UI\n(HF ZeroGPU)"]
     end
 
     style Data fill:#1e1b4b,stroke:#6366f1,color:#fff
@@ -225,10 +225,10 @@ dvc repro
 | **ML / DL** | Scikit-Learn · TensorFlow / Keras · Gensim |
 | **NLP** | TF-IDF (Word + Char N-grams) · FastText 300D Embeddings |
 | **Data** | MongoDB · Pandas · NumPy · SciPy Sparse |
-| **Web** | Gradio · Flask · REST API |
+| **Web** | Gradio |
 | **MLOps** | DVC · MLflow · DagsHub |
-| **Deployment** | Docker · Hugging Face Spaces · Render |
-| **Monitoring** | Custom Logging · Experiment Tracking |
+| **Deployment** | Hugging Face Spaces (ZeroGPU) |
+| **Monitoring** | Custom Logging · Async MongoDB Prediction Storage |
 
 </div>
 
@@ -250,6 +250,7 @@ pip install -r requirements.txt
 # Create a .env file
 MONGODB_URI=your_mongodb_connection_string
 DATABASE_NAME=your_database
+PREDICTION_COLLECTION=predictions
 TRAIN_COLLECTION=train
 TEST_COLLECTION=test
 TEST_LABELS_COLLECTION=test_labels
@@ -270,18 +271,8 @@ python main.py
 ### 4. Launch the App
 
 ```bash
-# Gradio UI
+# Gradio UI with ZeroGPU support
 python app.py
-
-# Flask API
-python flask_app.py
-```
-
-### 5. Docker Deployment
-
-```bash
-docker build -t toxic-classifier .
-docker run -p 7860:7860 toxic-classifier
 ```
 
 <br/>
@@ -319,51 +310,7 @@ Toxic-Comment-Classifier/
 
 <br/>
 
-## 🤝 API Reference
 
-### Prediction Endpoint
-
-```http
-POST /predict
-Content-Type: application/json
-```
-
-```json
-{
-  "text": "Your comment text here",
-  "model": "lr"
-}
-```
-
-**Response:**
-```json
-{
-  "text": "Your comment text here",
-  "model": "lr",
-  "predictions": {
-    "toxic": 0.0234,
-    "severe_toxic": 0.0012,
-    "obscene": 0.0089,
-    "threat": 0.0003,
-    "insult": 0.0156,
-    "identity_hate": 0.0008
-  }
-}
-```
-
-### Available Models
-
-```http
-GET /models
-```
-
-```json
-{
-  "models": ["lr", "bilstm"]
-}
-```
-
-<br/>
 
 ## 📜 License
 
