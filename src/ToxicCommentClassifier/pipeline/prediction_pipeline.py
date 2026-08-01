@@ -37,6 +37,7 @@ class PredictionPipeline:
         self.bilstm_model = None
         self.keras_tokenizer = None
         self.bilstm_max_seq_len = None
+        self.bilstm_available = False
 
         try:
             bilstm_config = config_manager.get_bilstm_training_config()
@@ -48,17 +49,15 @@ class PredictionPipeline:
             if os.environ.get("RENDER") == "true":
                 logger.warning("Running on Render (512MB RAM). Skipping BiLSTM load to prevent OOM crash.")
             elif os.path.exists(bilstm_model_path) and os.path.exists(keras_tokenizer_path):
-                import tensorflow as tf
-                from tensorflow.keras.preprocessing.sequence import pad_sequences
-
-                self.keras_tokenizer = joblib.load(keras_tokenizer_path)
-                self.bilstm_model = tf.keras.models.load_model(bilstm_model_path)
+                self.bilstm_model_path = bilstm_model_path
+                self.keras_tokenizer_path = keras_tokenizer_path
                 self.bilstm_max_seq_len = bilstm_config.max_seq_len
-                logger.info("BiLSTM model loaded successfully.")
+                self.bilstm_available = True
+                logger.info("BiLSTM artifacts found. Model will be loaded lazily on first prediction to prevent early CUDA initialization.")
             else:
                 logger.warning("BiLSTM model artifacts not found. BiLSTM predictions will be unavailable.")
         except Exception as e:
-            logger.warning(f"Could not load BiLSTM model: {e}. BiLSTM predictions will be unavailable.")
+            logger.warning(f"Could not load BiLSTM model artifacts: {e}. BiLSTM predictions will be unavailable.")
 
     def predict(self, text: str, model_type: str = "lr") -> dict:
         """
@@ -91,8 +90,14 @@ class PredictionPipeline:
 
     def _predict_bilstm(self, cleaned_text: str) -> dict:
         """Predict using FastText + BiLSTM."""
-        if self.bilstm_model is None or self.keras_tokenizer is None:
+        if not getattr(self, "bilstm_available", False) and self.bilstm_model is None:
             raise ValueError("BiLSTM model is not available. Please train it first.")
+
+        if self.bilstm_model is None:
+            import tensorflow as tf
+            self.keras_tokenizer = joblib.load(self.keras_tokenizer_path)
+            self.bilstm_model = tf.keras.models.load_model(self.bilstm_model_path)
+            logger.info("BiLSTM model lazily loaded successfully.")
 
         from tensorflow.keras.preprocessing.sequence import pad_sequences
 
@@ -114,7 +119,7 @@ class PredictionPipeline:
         models = []
         if self.lr_model is not None:
             models.append("lr")
-        if self.bilstm_model is not None:
+        if getattr(self, "bilstm_available", False) or self.bilstm_model is not None:
             models.append("bilstm")
         return models
 
