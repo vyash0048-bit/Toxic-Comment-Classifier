@@ -1,0 +1,24 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Sync to Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Replace <YOUR_HF_USERNAME> and <YOUR_SPACE_NAME> with your actual details
+          git remote add space https://YashAI07:$HF_TOKEN@huggingface.co/spaces/Toxic-Comment-Classifier/Toxic-Comment-Classifier
+          git push --force space main
