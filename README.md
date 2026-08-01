@@ -322,6 +322,10 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
+<p align="center">
+  <img src="assets/footer_image.jpg" alt="Toxic Comment Classifier Footer Banner" width="800">
+</p>
+
 <p>
   <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=14&pause=1000&color=94A3B8&center=true&vCenter=true&random=false&width=400&lines=Built+with+❤️+by+vyash0048-bit;Star+⭐+if+you+found+this+useful!" alt="Footer" />
 </p>
