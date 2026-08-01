@@ -19,3 +19,5 @@ dagshub
 tensorflow
 gensim
 spaces
+uvicorn
+fastapi
