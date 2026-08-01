@@ -57,7 +57,13 @@ def store_prediction(text: str, model_type: str, predictions: dict):
 
 
 @spaces.GPU
+def run_model_inference(text: str, model_type: str):
+    """Run the actual ML model inference on the ephemeral ZeroGPU worker."""
+    return pipeline.predict(text, model_type=model_type)
+
+
 def predict_toxicity(text, model_choice):
+    """Main Gradio handler running on the persistent CPU container."""
     if not text.strip():
         return "Please enter some text."
         
@@ -69,12 +75,13 @@ def predict_toxicity(text, model_choice):
         if model_type not in pipeline.available_models:
             return f"Model '{model_choice}' is not available right now."
             
-        predictions = pipeline.predict(text, model_type=model_type)
+        # 1. Run inference on the ZeroGPU worker
+        predictions = run_model_inference(text, model_type)
 
-        # Store prediction in MongoDB (async, non-blocking)
+        # 2. Store prediction in MongoDB (from this persistent CPU container)
         store_prediction(text, model_type, predictions)
         
-        # Format the output nicely
+        # 3. Format the output nicely
         result = "### Toxicity Analysis:\n\n"
         for label, prob in predictions.items():
             result += f"- **{label.replace('_', ' ').title()}**: {prob:.2%}\n"
