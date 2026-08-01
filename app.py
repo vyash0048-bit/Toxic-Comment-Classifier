@@ -1,9 +1,11 @@
 import gradio as gr
+import spaces
 from src.ToxicCommentClassifier.pipeline.prediction_pipeline import PredictionPipeline
 
 # Initialize the pipeline
 pipeline = PredictionPipeline()
 
+@spaces.GPU
 def predict_toxicity(text, model_choice):
     if not text.strip():
         return "Please enter some text."

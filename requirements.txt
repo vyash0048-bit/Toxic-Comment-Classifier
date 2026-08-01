@@ -18,3 +18,4 @@ mlflow
 dagshub
 tensorflow
 gensim
+spaces
