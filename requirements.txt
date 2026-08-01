@@ -18,6 +18,4 @@ mlflow
 dagshub
 tensorflow
 gensim
-gradio
-uvicorn
-fastapi
+spaces
