@@ -15,6 +15,7 @@ pipeline = PredictionPipeline()
 # --- MongoDB connection for storing predictions ---
 mongo_client = None
 predictions_collection = None
+db_error_message = None
 
 try:
     mongodb_uri = os.getenv("MONGODB_URI")
@@ -29,8 +30,10 @@ try:
         predictions_collection = mongo_client[db_name][pred_collection_name]
         logger.info(f"MongoDB connected. Predictions will be stored in '{db_name}.{pred_collection_name}'.")
     else:
-        logger.warning("MongoDB env vars not set. Predictions will NOT be stored.")
+        db_error_message = "MongoDB env vars (MONGODB_URI, DATABASE_NAME) not found in Hugging Face Secrets."
+        logger.warning(db_error_message)
 except Exception as e:
+    db_error_message = f"Connection failed: {str(e)}"
     logger.warning(f"Could not connect to MongoDB: {e}. Predictions will NOT be stored.")
     predictions_collection = None
 
@@ -38,7 +41,7 @@ except Exception as e:
 def store_prediction(text: str, model_type: str, predictions: dict) -> str:
     """Store a prediction record in MongoDB (synchronous for debugging)."""
     if predictions_collection is None:
-        return "⚠️ Database not connected (Missing Secrets or Network Blocked)."
+        return f"⚠️ Database not connected. Reason: {db_error_message}"
     try:
         predictions_collection.insert_one({
             "comment_text": text,
