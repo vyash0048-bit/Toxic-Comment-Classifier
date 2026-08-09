@@ -21,7 +21,10 @@ pinned: false
 
 <p>
   <a href="https://huggingface.co/spaces/YashAI07/Toxic-Comment-Classifier">
-    <img src="https://img.shields.io/badge/🤗%20Live%20Demo-Hugging%20Face-FFD21E?style=for-the-badge&labelColor=000" alt="Live Demo" />
+    <img src="https://img.shields.io/badge/🤗%20Live%20Demo-Hugging%20Face-FFD21E?style=for-the-badge&labelColor=000" alt="HF Live Demo" />
+  </a>
+  <a href="https://tinyurl.com/2c6bns36">
+    <img src="https://img.shields.io/badge/☁️%20Live%20App-AWS%20EC2-FF9900?style=for-the-badge&logo=amazonaws&labelColor=000" alt="AWS Live Demo" />
   </a>
   <a href="https://github.com/vyash0048-bit/Toxic-Comment-Classifier">
     <img src="https://img.shields.io/badge/Source%20Code-GitHub-181717?style=for-the-badge&logo=github&labelColor=000" alt="GitHub" />
