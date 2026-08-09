@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import joblib
 import numpy as np
 import pandas as pd
@@ -8,6 +9,39 @@ from src.ToxicCommentClassifier.components.data_preprocessing import clean_text
 from src.ToxicCommentClassifier.logger import logger
 
 LABELS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+
+
+class SimpleTokenizer:
+    """Lightweight tokenizer that replicates Keras Tokenizer.texts_to_sequences
+    without requiring TensorFlow. Loads from a JSON config file."""
+
+    def __init__(self, config_path: str):
+        with open(config_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        self.word_index = data["word_index"]
+        self.num_words = data.get("num_words")
+        self.oov_token = data.get("oov_token")
+        self.lower = data.get("lower", True)
+        self.char_level = data.get("char_level", False)
+
+    def texts_to_sequences(self, texts: list) -> list:
+        """Convert list of texts to list of integer sequences."""
+        sequences = []
+        for text in texts:
+            if self.lower:
+                text = text.lower()
+            if self.char_level:
+                words = list(text)
+            else:
+                words = text.split()
+            seq = []
+            for word in words:
+                idx = self.word_index.get(word)
+                if idx is not None:
+                    if self.num_words is None or idx < self.num_words:
+                        seq.append(idx)
+            sequences.append(seq)
+        return sequences
 
 class PredictionPipeline:
     def __init__(self):
@@ -46,11 +80,13 @@ class PredictionPipeline:
             bilstm_model_path = str(bilstm_config.model_path)
             keras_tokenizer_path = str(bilstm_config.tokenizer_path)
             
+            json_tokenizer_path = os.path.join(os.path.dirname(keras_tokenizer_path), "tokenizer_config.json")
+            
             if os.environ.get("RENDER") == "true":
                 logger.warning("Running on Render (512MB RAM). Skipping BiLSTM load to prevent OOM crash.")
-            elif os.path.exists(bilstm_model_path) and os.path.exists(keras_tokenizer_path):
+            elif os.path.exists(bilstm_model_path) and (os.path.exists(keras_tokenizer_path) or os.path.exists(json_tokenizer_path)):
                 self.bilstm_model_path = bilstm_model_path
-                self.keras_tokenizer_path = keras_tokenizer_path
+                self.keras_tokenizer_path = json_tokenizer_path if os.path.exists(json_tokenizer_path) else keras_tokenizer_path
                 self.bilstm_max_seq_len = bilstm_config.max_seq_len
                 self.bilstm_available = True
                 logger.info("BiLSTM artifacts found. Model will be loaded lazily on first prediction to prevent early CUDA initialization.")
@@ -89,29 +125,48 @@ class PredictionPipeline:
         }
 
     def _predict_bilstm(self, cleaned_text: str) -> dict:
-        """Predict using FastText + BiLSTM."""
+        """Predict using FastText + BiLSTM (TFLite Runtime for lightweight deployment)."""
         if not getattr(self, "bilstm_available", False) and self.bilstm_model is None:
             raise ValueError("BiLSTM model is not available. Please train it first.")
 
         if self.bilstm_model is None:
+            # Load tokenizer (JSON preferred, fallback to joblib which needs keras)
+            if self.keras_tokenizer_path.endswith(".json"):
+                self.keras_tokenizer = SimpleTokenizer(self.keras_tokenizer_path)
+            else:
+                self.keras_tokenizer = joblib.load(self.keras_tokenizer_path)
+
             import tensorflow as tf
-            self.keras_tokenizer = joblib.load(self.keras_tokenizer_path)
             self.bilstm_model = tf.keras.models.load_model(self.bilstm_model_path)
-            logger.info("BiLSTM model lazily loaded successfully.")
+            logger.info("BiLSTM Keras model lazily loaded successfully.")
 
-        from tensorflow.keras.preprocessing.sequence import pad_sequences
-
+        # Tokenize and pad the input
         sequences = self.keras_tokenizer.texts_to_sequences([cleaned_text])
-        padded = pad_sequences(
-            sequences, maxlen=self.bilstm_max_seq_len,
-            padding="post", truncating="post"
-        )
-        probabilities = self.bilstm_model.predict(padded, verbose=0)[0]
+        padded = self._pad_sequences(
+            sequences, maxlen=self.bilstm_max_seq_len
+        ).astype(np.int32)
 
+        # Run inference using TensorFlow CPU
+        probabilities = self.bilstm_model.predict(padded, verbose=0)[0]
         return {
             label: round(float(prob), 4)
             for label, prob in zip(LABELS, probabilities)
         }
+
+    @staticmethod
+    def _pad_sequences(sequences, maxlen, padding="post", truncating="post", value=0):
+        """Lightweight pad_sequences replacement (no TensorFlow dependency needed)."""
+        result = np.full((len(sequences), maxlen), value, dtype=np.int32)
+        for i, seq in enumerate(sequences):
+            if truncating == "post":
+                trunc = seq[:maxlen]
+            else:
+                trunc = seq[-maxlen:]
+            if padding == "post":
+                result[i, :len(trunc)] = trunc
+            else:
+                result[i, maxlen - len(trunc):] = trunc
+        return result
 
     @property
     def available_models(self) -> list:

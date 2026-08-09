@@ -1,34 +1,42 @@
-# Use a lightweight, official Python 3.12 image
+# ── Stage 1: Build ──────────────────────────────────────────────────
+FROM python:3.12-slim AS builder
+
+# Install system dependencies needed for building Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Copy only the deploy requirements to leverage Docker layer caching
+COPY requirements-deploy.txt ./
+
+# Install dependencies into a clean prefix
+RUN pip install --no-cache-dir --prefix=/install -r requirements-deploy.txt
+
+# ── Stage 2: Runtime ────────────────────────────────────────────────
 FROM python:3.12-slim
 
-# Set up a new user named "user" with user ID 1000 (required for Hugging Face Spaces)
+# Create a non-root user
 RUN useradd -m -u 1000 user
 
-# Set environment variables for the user
+# Copy installed Python packages from the builder stage
+COPY --from=builder /install /usr/local
+
+# Set environment variables
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH
 
-# Set the working directory to the user's home directory
-WORKDIR $HOME/app
+WORKDIR /home/user/app
 
-# Install system dependencies needed for some Python packages
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+# Copy application code (respects .dockerignore)
+COPY --chown=user:user . .
 
-# Copy only the dependency files first to leverage Docker layer caching
-COPY --chown=user:user requirements.* ./
-
-# Switch to the "user" user
 USER user
 
-# Install dependencies in the user's local directory
-RUN pip install --user --no-cache-dir -r requirements.txt || pip install --user --no-cache-dir -r requirements.in
+# Expose port 5000 for the Flask web server
+EXPOSE 5000
 
-# Copy the rest of the application code
-COPY --chown=user:user . $HOME/app
-
-# Expose port 7860 for the Flask web server
-EXPOSE 7860
-
-# Pull DVC artifacts (if remote is configured) then start the app.
-# The '|| true' ensures the app starts even if dvc pull fails.
-CMD ["sh", "-c", "dvc pull || true && python app.py"]
+# Start the Flask app
+ENV PORT=5000
+CMD ["python", "flask_app.py"]

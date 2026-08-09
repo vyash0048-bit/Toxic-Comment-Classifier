@@ -17,5 +17,29 @@ __pycache__/
 .vscode/
 .idea/
 
-# Heavy datasets (we only need the preprocessed models for inference, not the raw text data)
+# Heavy datasets and embeddings (training-only, not needed for inference)
 artifacts/data_ingestion/*.csv
+artifacts/data_preprocessing/preprocessed_*.joblib
+artifacts/bilstm_training/fasttext_model.bin*
+artifacts/bilstm_training/bilstm_model.tflite
+artifacts/bilstm_training/keras_tokenizer.joblib
+artifacts/deberta_training/
+*.vec
+*.vec.zip
+
+# Database files
+*.db
+
+# DVC internals (the Dockerfile runs dvc pull at runtime)
+.dvc/
+
+# Research notebooks
+research/
+
+# GitHub Actions
+.github/
+
+# Misc
+*.zip
+LICENSE
+README.md

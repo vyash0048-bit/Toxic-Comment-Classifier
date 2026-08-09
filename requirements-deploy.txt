@@ -1,0 +1,14 @@
+# Minimal requirements for Flask API inference (LR + BiLSTM models)
+Flask
+Flask-Cors
+scikit-learn
+joblib
+numpy
+pandas
+pyYAML
+python-box
+ensure
+python-dotenv
+pymongo
+tqdm
+tensorflow-cpu
