@@ -16,14 +16,14 @@ pinned: false
 ### *AI-Powered Real-Time Content Moderation*
 
 <p>
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1000&color=6366F1&center=true&vCenter=true&random=false&width=600&lines=Multi-Label+Toxicity+Detection;Logistic+Regression+%2B+BiLSTM;FastText+300D+Embeddings;Real-Time+Comment+Analysis;97%25+Mean+ROC-AUC+Score" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=22&pause=1000&color=6366F1&center=true&vCenter=true&random=false&width=600&lines=Multi-Label+Toxicity+Detection;Logistic+Regression+%2B+BiLSTM;FastText+300D+Embeddings;Real-Time+Comment+Analysis;97%25+Mean+ROC-AUC+Score" alt="Typing SVG" />
 </p>
 
 <p>
   <a href="https://huggingface.co/spaces/YashAI07/Toxic-Comment-Classifier">
     <img src="https://img.shields.io/badge/🤗%20Live%20Demo-Hugging%20Face-FFD21E?style=for-the-badge&labelColor=000" alt="HF Live Demo" />
   </a>
-  <a href="https://tinyurl.com/2c6bns36">
+  <a href="https://tinyurl.com/d2c3h234">
     <img src="https://img.shields.io/badge/☁️%20Live%20App-AWS%20EC2-FF9900?style=for-the-badge&logo=amazonaws&labelColor=000" alt="AWS Live Demo" />
   </a>
   <a href="https://github.com/vyash0048-bit/Toxic-Comment-Classifier">
