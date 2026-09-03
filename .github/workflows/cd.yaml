@@ -28,8 +28,12 @@ jobs:
             
             cd ~/Toxic-Comment-Classifier
             git pull origin main
-            # Stop any running instances of the app
-            pkill -f "flask_app.py" || true
+            
+            # Stop any running instance using saved PID file
+            if [ -f app.pid ]; then
+              kill $(cat app.pid) 2>/dev/null || true
+              rm -f app.pid
+            fi
             
             # Set up virtual environment and install requirements
             python3 -m venv venv
@@ -40,3 +44,4 @@ jobs:
             # Start the Flask app in the background on port 5000 (properly detached)
             export PORT=5000
             nohup python flask_app.py > app.log 2>&1 < /dev/null &
+            echo $! > app.pid
