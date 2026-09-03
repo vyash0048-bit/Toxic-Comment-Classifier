@@ -31,6 +31,6 @@ jobs:
             pip install --upgrade pip
             pip install --no-cache-dir -r requirements-deploy.txt
             
-            # Start the Flask app in the background on port 5000
+            # Start the Flask app in the background on port 5000 (properly detached)
             export PORT=5000
-            nohup python flask_app.py > app.log 2>&1 &
+            nohup python flask_app.py > app.log 2>&1 < /dev/null &
