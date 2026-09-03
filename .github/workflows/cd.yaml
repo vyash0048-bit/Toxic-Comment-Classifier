@@ -22,16 +22,15 @@ jobs:
           script: |
             cd ~/Toxic-Comment-Classifier
             git pull origin main
+            # Stop any running instances of the app
+            pkill -f "flask_app.py" || true
             
-            # Stop the old container (don't fail if it doesn't exist yet)
-            sudo docker stop toxic-app || true
-            sudo docker rm toxic-app || true
+            # Set up virtual environment and install requirements
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install --upgrade pip
+            pip install --no-cache-dir -r requirements-deploy.txt
             
-            # Free up disk space by removing old unused images and containers
-            sudo docker system prune -a -f
-
-            # Build the new image
-            sudo docker build -t toxic-app .
-                
-            # Run the new container (maps port 80 on EC2 to 5000 in the container)
-            sudo docker run -d --name toxic-app -p 80:5000 toxic-app
+            # Start the Flask app in the background on port 5000
+            export PORT=5000
+            nohup python flask_app.py > app.log 2>&1 &
