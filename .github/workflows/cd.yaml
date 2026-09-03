@@ -24,11 +24,11 @@ jobs:
             git pull origin main
             
             # Stop the old container (don't fail if it doesn't exist yet)
-            docker stop toxic-app || true
-            docker rm toxic-app || true
+            sudo docker stop toxic-app || true
+            sudo docker rm toxic-app || true
 
             # Build the new image
-            docker build -t toxic-app .
+            sudo docker build -t toxic-app .
                 
             # Run the new container (maps port 80 on EC2 to 5000 in the container)
-            docker run -d --name toxic-app -p 80:5000 toxic-app
+            sudo docker run -d --name toxic-app -p 80:5000 toxic-app
