@@ -11,7 +11,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
           
       - name: Deploy to AWS EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -20,6 +20,11 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Clone the repository if it doesn't exist yet
+            if [ ! -d "$HOME/Toxic-Comment-Classifier" ]; then
+              git clone https://github.com/vyash0048-bit/Toxic-Comment-Classifier.git $HOME/Toxic-Comment-Classifier
+            fi
+            
             cd ~/Toxic-Comment-Classifier
             git pull origin main
             # Stop any running instances of the app
