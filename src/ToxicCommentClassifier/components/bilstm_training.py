@@ -179,7 +179,7 @@ class BiLSTMTraining:
                 epochs=self.config.epochs,
                 batch_size=self.config.batch_size,
                 callbacks=callbacks,
-                verbose=1
+                verbose=2
             )
 
             # --- 5. Find optimal per-label thresholds on validation set ---

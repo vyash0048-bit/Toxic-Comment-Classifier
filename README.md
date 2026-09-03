@@ -170,16 +170,19 @@ flowchart LR
 
 <div align="center">
 
-| Category | LR ROC-AUC | BiLSTM ROC-AUC | LR F1 | BiLSTM F1 |
-|:--|:--:|:--:|:--:|:--:|
-| 🔴 **Toxic** | 0.9427 | 0.9426 | 0.6613 | 0.6076 |
-| 🟣 **Severe Toxic** | 0.9843 | **0.9860** | 0.3120 | **0.3524** |
-| 🟠 **Obscene** | 0.9762 | 0.9744 | 0.6795 | **0.6799** |
-| 🔵 **Threat** | **0.9893** | 0.9563 | **0.3765** | 0.1062 |
-| 🟡 **Insult** | 0.9699 | 0.9666 | 0.5701 | **0.5925** |
-| ⚫ **Identity Hate** | 0.9430 | 0.9214 | 0.3418 | **0.3758** |
-| | | | | |
-| 🏆 **Mean ROC-AUC** | **0.9676** | 0.9579 | — | — |
+| Category | LR ROC-AUC | BiLSTM ROC-AUC | LR F1 | BiLSTM F1 | LR Recall | BiLSTM Recall |
+|:--|:--:|:--:|:--:|:--:|:--:|:--:|
+| 🔴 **Toxic** | 0.9424 | **0.9461** | **0.6567** | 0.6284 | 0.6804 | **0.8683** |
+| 🟣 **Severe Toxic** | 0.9849 | **0.9897** | 0.3189 | **0.3791** | 0.2915 | **0.7929** |
+| 🟠 **Obscene** | **0.9752** | 0.9742 | **0.6814** | 0.6415 | 0.6215 | **0.8306** |
+| 🔵 **Threat** | 0.9905 | **0.9914** | 0.3426 | **0.4326** | 0.2322 | **0.6777** |
+| 🟡 **Insult** | 0.9702 | **0.9730** | 0.6038 | **0.6389** | 0.5091 | **0.7723** |
+| ⚫ **Identity Hate** | **0.9435** | 0.9419 | 0.3827 | **0.5864** | 0.2689 | **0.6212** |
+| | | | | | | |
+| 🏆 **Mean ROC-AUC** | 0.9678 | **0.9694** | — | — | — | — |
+
+<br/>
+<em>Note: The BiLSTM model significantly outperforms the baseline in <b>Recall</b> across all categories by finding the optimal classification thresholds during evaluation. This makes it far more effective at catching toxic comments in real-world moderation systems.</em>
 
 </div>
 

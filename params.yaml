@@ -23,5 +23,5 @@ BiLSTMTraining:
   dropout: 0.3
   spatial_dropout: 0.2
   batch_size: 256
-  epochs: 3
+  epochs: 10
   learning_rate: 0.001

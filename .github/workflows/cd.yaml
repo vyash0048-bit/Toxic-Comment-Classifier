@@ -1,4 +1,4 @@
-name: CD
+name: CD to AWS EC2
 
 on:
   push:
@@ -12,13 +12,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
           
-      - name: Sync to Hugging Face Spaces
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          # Replace <YOUR_HF_USERNAME> and <YOUR_SPACE_NAME> with your actual details
-          git remote add space https://YashAI07:$HF_TOKEN@huggingface.co/spaces/YashAI07/Toxic-Comment-Classifier
-          git push --force space main
+      - name: Deploy to AWS EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/Toxic-Comment-Classifier
+            git pull origin main
+            
+            # Stop the old container (don't fail if it doesn't exist yet)
+            docker stop toxic-app || true
+            docker rm toxic-app || true
+
+            # Build the new image
+            docker build -t toxic-app .
+                
+            # Run the new container (maps port 80 on EC2 to 5000 in the container)
+            docker run -d --name toxic-app -p 80:5000 toxic-app
