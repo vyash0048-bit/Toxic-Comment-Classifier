@@ -32,6 +32,7 @@ jobs:
             
             # Install git-lfs if not present
             if ! command -v git-lfs &> /dev/null; then
+              sudo apt-get --fix-broken install -y -qq > /dev/null
               sudo apt-get update -qq && sudo apt-get install -y -qq git-lfs > /dev/null
               git lfs install
             fi
