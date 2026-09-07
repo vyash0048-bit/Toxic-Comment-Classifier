@@ -29,7 +29,22 @@ jobs:
             fi
             
             cd ~/Toxic-Comment-Classifier
+            
+            # Install git-lfs if not present
+            if ! command -v git-lfs &> /dev/null; then
+              sudo apt-get update -qq && sudo apt-get install -y -qq git-lfs > /dev/null
+              git lfs install
+            fi
+            
             git pull origin main
+            git lfs pull
+            
+            echo "--- DIAGNOSTICS ---"
+            ls -la artifacts/bilstm_training/
+            ls -la artifacts/model_training/
+            ls -la artifacts/data_preprocessing/
+            cat artifacts/bilstm_training/bilstm_model.keras | head -n 10
+            echo "-------------------"
             
             # Stop any running instance using saved PID file
             if [ -f app.pid ]; then
