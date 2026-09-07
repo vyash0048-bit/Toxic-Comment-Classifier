@@ -37,20 +37,18 @@ jobs:
               rm -f app.pid
             fi
             
-            # Install Python 3.12 (TensorFlow doesn't support 3.14 yet)
-            if ! command -v python3.12 &> /dev/null; then
-              sudo add-apt-repository -y ppa:deadsnakes/ppa > /dev/null 2>&1
-              sudo apt-get update -qq
-              sudo apt-get install -y -qq python3.12 python3.12-venv python3.12-dev > /dev/null
+            # Install uv if not present (manages Python versions automatically)
+            if ! command -v uv &> /dev/null; then
+              curl -LsSf https://astral.sh/uv/install.sh | sh
+              export PATH="$HOME/.local/bin:$PATH"
             fi
             
-            # Set up virtual environment with Python 3.12
+            # Set up virtual environment with Python 3.12 via uv
             rm -rf venv
-            python3.12 -m venv --clear venv
+            uv venv --python 3.12 venv
             source venv/bin/activate
             python --version
-            pip install --upgrade pip
-            pip install --no-cache-dir -r requirements-deploy.txt
+            uv pip install -r requirements-deploy.txt
             
             # Start the Flask app in the background on port 5000 (properly detached)
             export PORT=5000
