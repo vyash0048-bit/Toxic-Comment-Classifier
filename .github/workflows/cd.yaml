@@ -45,8 +45,10 @@ jobs:
             fi
             
             # Set up virtual environment with Python 3.12
-            python3.12 -m venv venv
+            rm -rf venv
+            python3.12 -m venv --clear venv
             source venv/bin/activate
+            python --version
             pip install --upgrade pip
             pip install --no-cache-dir -r requirements-deploy.txt
             
