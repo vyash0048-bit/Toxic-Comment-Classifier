@@ -45,7 +45,7 @@ jobs:
             # Pull model files from DagsHub using DVC
             export DAGSHUB_USER_TOKEN="cf91bd3261b036597f4bf09e72ec56ec5d602008"
             dvc remote modify origin --local auth basic
-            dvc remote modify origin --local user vyash0048-bit
+            dvc remote modify origin --local user vyash0048
             dvc remote modify origin --local password $DAGSHUB_USER_TOKEN
             dvc pull -r origin
             

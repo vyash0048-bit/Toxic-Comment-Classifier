@@ -166,7 +166,7 @@ stages:
         BiLSTMTraining.batch_size: 256
         BiLSTMTraining.dropout: 0.3
         BiLSTMTraining.embedding_dim: 300
-        BiLSTMTraining.epochs: 10
+        BiLSTMTraining.epochs: 25
         BiLSTMTraining.learning_rate: 0.001
         BiLSTMTraining.lstm_units: 128
         BiLSTMTraining.max_seq_len: 150
@@ -174,15 +174,15 @@ stages:
     outs:
     - path: artifacts/bilstm_training/bilstm_model.keras
       hash: md5
-      md5: 0caabdcc1241913c24d15cb8ecd15ec9
-      size: 29523304
+      md5: 855630a6cbff44f73e72d816b982ad22
+      size: 29523303
     - path: artifacts/bilstm_training/keras_tokenizer.joblib
       hash: md5
-      md5: 297ee520b45cb6b183cfdf0f42da8253
+      md5: e6cbae43260ce65d39d06a1e8c7d195e
       size: 8498465
     - path: artifacts/bilstm_training/optimal_thresholds.joblib
       hash: md5
-      md5: 04e046e9c545ca5275c61f47a41a3835
+      md5: 1e14e35a47c6b23a0405ed2db0e00d9a
       size: 137
   bilstm_evaluation:
     cmd: python -m 
