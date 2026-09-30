@@ -20,10 +20,7 @@ pinned: false
 </p>
 
 <p>
-  <a href="https://huggingface.co/spaces/YashAI07/Toxic-Comment-Classifier">
-    <img src="https://img.shields.io/badge/🤗%20Live%20Demo-Hugging%20Face-FFD21E?style=for-the-badge&labelColor=000" alt="HF Live Demo" />
-  </a>
-  <a href="https://tinyurl.com/d2c3h234">
+  <a href="http://32.236.89.62:5000/">
     <img src="https://img.shields.io/badge/☁️%20Live%20App-AWS%20EC2-FF9900?style=for-the-badge&logo=amazonaws&labelColor=000" alt="AWS Live Demo" />
   </a>
   <a href="https://github.com/vyash0048-bit/Toxic-Comment-Classifier">
@@ -115,7 +112,7 @@ flowchart LR
 
     subgraph Deployment["🚀 Deployment"]
         H --> J[MLflow + DagsHub]
-        H --> K["Gradio UI\n(HF ZeroGPU)"]
+        H --> K["AWS EC2\n(Flask + CD)"]
     end
 
     style Data fill:#1e1b4b,stroke:#6366f1,color:#fff
@@ -233,7 +230,7 @@ dvc repro
 | **Data** | MongoDB · Pandas · NumPy · SciPy Sparse |
 | **Web** | Gradio |
 | **MLOps** | DVC · MLflow · DagsHub |
-| **Deployment** | Hugging Face Spaces (ZeroGPU) |
+| **Deployment** | AWS EC2 (Flask + Systemd + CI/CD) |
 | **Monitoring** | Custom Logging · Async MongoDB Prediction Storage |
 
 </div>
@@ -277,8 +274,8 @@ python main.py
 ### 4. Launch the App
 
 ```bash
-# Gradio UI with ZeroGPU support
-python app.py
+# Start the Flask web dashboard
+python flask_app.py
 ```
 
 <br/>
