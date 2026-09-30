@@ -47,11 +47,8 @@ jobs:
             cat artifacts/bilstm_training/bilstm_model.keras | head -n 10
             echo "-------------------"
             
-            # Stop any running instance using saved PID file
-            if [ -f app.pid ]; then
-              kill $(cat app.pid) 2>/dev/null || true
-              rm -f app.pid
-            fi
+            # Stop any running instance
+            sudo systemctl stop toxic-app 2>/dev/null || true
             
             # Free up disk space
             sudo docker system prune -a -f 2>/dev/null || true
@@ -73,7 +70,26 @@ jobs:
             python --version
             uv pip install -r requirements-deploy.txt
             
-            # Start the Flask app in the background on port 5000 (properly detached)
-            export PORT=5000
-            nohup python flask_app.py > app.log 2>&1 < /dev/null &
-            echo $! > app.pid
+            # Create systemd service for auto-start on boot
+            sudo tee /etc/systemd/system/toxic-app.service > /dev/null <<EOF
+            [Unit]
+            Description=Toxic Comment Classifier Flask App
+            After=network.target
+            
+            [Service]
+            User=$(whoami)
+            WorkingDirectory=$HOME/Toxic-Comment-Classifier
+            ExecStart=$HOME/Toxic-Comment-Classifier/venv/bin/python $HOME/Toxic-Comment-Classifier/flask_app.py
+            Environment=PORT=5000
+            Restart=always
+            RestartSec=5
+            
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+            
+            # Enable and start the service
+            sudo systemctl daemon-reload
+            sudo systemctl enable toxic-app
+            sudo systemctl restart toxic-app
+            sudo systemctl status toxic-app --no-pager
