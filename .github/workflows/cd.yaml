@@ -30,27 +30,29 @@ jobs:
             
             cd ~/Toxic-Comment-Classifier
             
-            # Install git-lfs if not present
-            if ! command -v git-lfs &> /dev/null; then
-              sudo apt-get --fix-broken install -y -qq > /dev/null
-              sudo apt-get update -qq && sudo apt-get install -y -qq git-lfs > /dev/null
-              git lfs install
-            fi
-            
             git pull origin main
             
-            # Force re-download LFS files (delete stale pointers first)
-            rm -f artifacts/bilstm_training/bilstm_model.keras
-            rm -f artifacts/model_training/model.joblib
-            rm -f artifacts/data_preprocessing/vectorizer.joblib
-            git checkout -- artifacts/
-            git lfs pull
+            # Install uv if not present (manages Python versions automatically)
+            if ! command -v uv &> /dev/null; then
+              curl -LsSf https://astral.sh/uv/install.sh | sh
+              export PATH="$HOME/.local/bin:$PATH"
+            fi
             
-            # Verify model files are actual files, not LFS pointers
+            # Install DVC globally using uv
+            uv tool install dvc
+            export PATH="$HOME/.local/bin:$PATH"
+            
+            # Pull model files from DagsHub using DVC
+            export DAGSHUB_USER_TOKEN="cf91bd3261b036597f4bf09e72ec56ec5d602008"
+            dvc remote modify origin --local auth basic
+            dvc remote modify origin --local user vyash0048-bit
+            dvc remote modify origin --local password $DAGSHUB_USER_TOKEN
+            dvc pull -r origin
+            
+            # Verify model files
             echo "--- FILE SIZES ---"
-            du -h artifacts/bilstm_training/bilstm_model.keras
-            du -h artifacts/model_training/model.joblib
-            du -h artifacts/data_preprocessing/vectorizer.joblib
+            du -h artifacts/bilstm_training/bilstm_model.keras || true
+            du -h artifacts/model_training/model.joblib || true
             echo "-----------------"
             
             # Stop any running instance
