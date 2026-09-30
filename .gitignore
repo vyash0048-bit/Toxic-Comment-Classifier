@@ -219,16 +219,6 @@ __marimo__/
 
 # Project specific
 artifacts/*
-!artifacts/model_training/
-artifacts/model_training/*
-!artifacts/model_training/model.joblib
-!artifacts/data_preprocessing/
-artifacts/data_preprocessing/*
-!artifacts/data_preprocessing/vectorizer.joblib
-!artifacts/bilstm_training/
-artifacts/bilstm_training/*
-!artifacts/bilstm_training/bilstm_model.keras
-!artifacts/bilstm_training/tokenizer_config.json
 logs/
 
 wiki-news-300d-1M.vec*
