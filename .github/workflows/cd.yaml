@@ -58,7 +58,12 @@ jobs:
             dvc remote modify origin --local auth basic
             dvc remote modify origin --local user vyash0048
             dvc remote modify origin --local password $DAGSHUB_USER_TOKEN
-            dvc pull -r origin
+            dvc pull artifacts/bilstm_training/bilstm_model.keras \
+                     artifacts/bilstm_training/keras_tokenizer.joblib \
+                     artifacts/bilstm_training/optimal_thresholds.joblib \
+                     artifacts/model_training/model.joblib \
+                     artifacts/data_preprocessing/vectorizer.joblib \
+                     -r origin
             
             # Verify model files
             echo "--- FILE SIZES ---"
