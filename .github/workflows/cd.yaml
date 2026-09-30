@@ -38,14 +38,20 @@ jobs:
             fi
             
             git pull origin main
+            
+            # Force re-download LFS files (delete stale pointers first)
+            rm -f artifacts/bilstm_training/bilstm_model.keras
+            rm -f artifacts/model_training/model.joblib
+            rm -f artifacts/data_preprocessing/vectorizer.joblib
+            git checkout -- artifacts/
             git lfs pull
             
-            echo "--- DIAGNOSTICS ---"
-            ls -la artifacts/bilstm_training/
-            ls -la artifacts/model_training/
-            ls -la artifacts/data_preprocessing/
-            cat artifacts/bilstm_training/bilstm_model.keras | head -n 10
-            echo "-------------------"
+            # Verify model files are actual files, not LFS pointers
+            echo "--- FILE SIZES ---"
+            du -h artifacts/bilstm_training/bilstm_model.keras
+            du -h artifacts/model_training/model.joblib
+            du -h artifacts/data_preprocessing/vectorizer.joblib
+            echo "-----------------"
             
             # Stop any running instance
             sudo systemctl stop toxic-app 2>/dev/null || true
