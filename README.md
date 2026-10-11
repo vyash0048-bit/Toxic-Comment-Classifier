@@ -23,7 +23,6 @@
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/TensorFlow-2.x-FF6F00?style=flat-square&logo=tensorflow&logoColor=white" />
   <img src="https://img.shields.io/badge/Scikit--Learn-1.x-F7931E?style=flat-square&logo=scikit-learn&logoColor=white" />
-  <img src="https://img.shields.io/badge/Gradio-5.x-FF7C00?style=flat-square&logo=gradio&logoColor=white" />
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white" />
   <img src="https://img.shields.io/badge/DVC-Pipeline-13ADC7?style=flat-square&logo=dvc&logoColor=white" />
   <img src="https://img.shields.io/badge/MLflow-Tracked-0194E2?style=flat-square&logo=mlflow&logoColor=white" />
@@ -33,6 +32,12 @@
 
 > Detect **toxic**, **obscene**, **threatening**, and **hateful** language in real-time  
 > using a dual-model architecture powered by TF-IDF and FastText embeddings.
+
+<br/>
+
+<p align="center">
+  <img src="assets/Toxic_Comment_Project.gif" alt="Toxic Comment Classifier Demo" width="800" />
+</p>
 
 <br/>
 
@@ -297,6 +302,7 @@ Toxic-Comment-Classifier/
 │   └── 📂 entity/               # Data classes & schemas
 │
 ├── 📂 artifacts/                # Model weights & processed data
+├── 📂 assets/                   # Visual assets & demo media
 ├── 📂 config/                   # YAML configuration files
 ├── 📂 templates/                # Flask HTML dashboard
 └── 📂 research/                 # Jupyter notebooks
